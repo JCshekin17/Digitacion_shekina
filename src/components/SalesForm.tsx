@@ -13,6 +13,7 @@ const HOTELS = [
   'BAHARI SUITE',
   'CASA TURBAY',
   'CONDOMINIO MONTU',
+  'OTRO',
 ]
 
 // ── Estado inicial del formulario ────────────────────────────
@@ -30,6 +31,7 @@ const INITIAL_FORM: Omit<SaleRecord, 'id' | 'created_at' | 'balance'> = {
   service: '',
   total_price: 0,
   deposit: 0,
+  seller: '',
 }
 
 function formatCurrency(value: number) {
@@ -60,6 +62,7 @@ function buildWhatsAppMessage(data: Omit<SaleRecord, 'id' | 'created_at'> & { ba
     `• Habitación: ${data.room || 'N/A'}`,
     `• Personas: ${data.pax}`,
     `• Servicio: ${data.service || 'N/A'}`,
+    `• Asesor: ${data.seller || 'N/A'}`,
     ``,
     `💰 *FINANCIERO*`,
     `• Precio Total: ${formatCurrency(data.total_price)}`,
@@ -202,6 +205,7 @@ export default function SalesForm() {
   const [success, setSuccess] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [availableCities, setAvailableCities] = useState<string[]>([])
+  const [customHotel, setCustomHotel] = useState('')
 
   // Autocalcular balance
   useEffect(() => {
@@ -226,9 +230,16 @@ export default function SalesForm() {
   const handleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
       const { name, value, type } = e.target
+      let finalValue: string | number = type === 'number' ? (value === '' ? 0 : parseFloat(value)) : value
+
+      // Forzar mayúsculas en el campo asesor
+      if (name === 'seller' && typeof finalValue === 'string') {
+        finalValue = finalValue.toUpperCase()
+      }
+
       setForm((prev) => ({
         ...prev,
-        [name]: type === 'number' ? (value === '' ? 0 : parseFloat(value)) : value,
+        [name]: finalValue,
       }))
     },
     []
@@ -254,16 +265,22 @@ export default function SalesForm() {
     setError(null)
     setSuccess(false)
     try {
+      // Si el hotel es "OTRO", usamos el nombre personalizado
+      const finalHotel = form.hotel === 'OTRO' ? customHotel : form.hotel
+      const submissionData = { ...form, hotel: finalHotel, balance }
+
       const { error: supabaseError } = await supabase
         .from('sales_records')
-        .insert([{ ...form, balance }])
+        .insert([submissionData])
+
       if (supabaseError) throw new Error(supabaseError.message)
 
-      const message = buildWhatsAppMessage({ ...form, balance })
+      const message = buildWhatsAppMessage(submissionData)
       window.open(`https://wa.me/573222309034?text=${message}`, '_blank')
 
       setSuccess(true)
       setForm({ ...INITIAL_FORM, date: new Date().toISOString().split('T')[0] })
+      setCustomHotel('')
       setBalance(0)
       setTimeout(() => setSuccess(false), 5000)
     } catch (err) {
@@ -317,6 +334,14 @@ export default function SalesForm() {
             <span className="inline-block flex-1 h-px bg-orange-400/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="label-corp" htmlFor="seller">Asesor de Venta *</label>
+              <input
+                id="seller" name="seller" type="text" required
+                placeholder="NOMBRE DEL ASESOR"
+                value={form.seller} onChange={handleChange} className="input-corp font-bold"
+              />
+            </div>
             <div>
               <label className="label-corp" htmlFor="date">Fecha de Reserva *</label>
               <input
@@ -445,24 +470,41 @@ export default function SalesForm() {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
             {/* Hotel — dropdown con hoteles predefinidos */}
-            <div>
-              <label className="label-corp" htmlFor="hotel">Hotel</label>
-              <select
-                id="hotel" name="hotel"
-                value={form.hotel} onChange={handleChange}
-                className="input-corp"
-                style={{
-                  appearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                }}
-              >
-                <option value="">— Selecciona un hotel —</option>
-                {HOTELS.map((h) => (
-                  <option key={h} value={h}>{h}</option>
-                ))}
-              </select>
+            <div className="space-y-3">
+              <div>
+                <label className="label-corp" htmlFor="hotel">Hotel</label>
+                <select
+                  id="hotel" name="hotel"
+                  value={form.hotel} onChange={handleChange}
+                  className="input-corp"
+                  style={{
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                  }}
+                >
+                  <option value="">— Selecciona un hotel —</option>
+                  {HOTELS.map((h) => (
+                    <option key={h} value={h}>{h}</option>
+                  ))}
+                </select>
+              </div>
+
+              {form.hotel === 'OTRO' && (
+                <div className="animate-fade-in">
+                  <label className="label-corp" htmlFor="custom_hotel">Nombre del Hotel Personalizado *</label>
+                  <input
+                    id="custom_hotel"
+                    type="text"
+                    required
+                    placeholder="Escribe el nombre del hotel"
+                    value={customHotel}
+                    onChange={(e) => setCustomHotel(e.target.value)}
+                    className="input-corp border-orange-500/50"
+                  />
+                </div>
+              )}
             </div>
 
             <div>

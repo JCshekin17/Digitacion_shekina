@@ -23,4 +23,5 @@ export interface SaleRecord {
   total_price: number
   deposit: number
   balance?: number
+  seller?: string
 }
