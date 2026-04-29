@@ -237,10 +237,19 @@ export default function SalesForm() {
         finalValue = finalValue.toUpperCase()
       }
 
-      setForm((prev) => ({
-        ...prev,
-        [name]: finalValue,
-      }))
+      setForm((prev) => {
+        const next = { ...prev, [name]: finalValue }
+        
+        // Si cambia PAX, recalculamos total_price basándonos en el servicio actual
+        if (name === 'pax') {
+          const service = SERVICES.find((s) => s.name === prev.service)
+          if (service) {
+            next.total_price = service.price * (next.pax as number)
+          }
+        }
+        
+        return next
+      })
     },
     []
   )
@@ -255,7 +264,7 @@ export default function SalesForm() {
     setForm((prev) => ({
       ...prev,
       service: selectedName,
-      total_price: service ? service.price : prev.total_price,
+      total_price: service ? service.price * prev.pax : prev.total_price,
     }))
   }, [])
 
