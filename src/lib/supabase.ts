@@ -1,12 +1,18 @@
 import { createClient } from '@supabase/supabase-js'
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || ''
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || ''
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Supabase environment variables are missing!')
+}
 
-// Tipos TypeScript para la tabla sales_records
-export interface SaleRecord {
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder.supabase.co',
+  supabaseAnonKey || 'placeholder'
+)
+
+export type SaleRecord = {
   id?: string
   created_at?: string
   date: string
@@ -22,6 +28,6 @@ export interface SaleRecord {
   service: string
   total_price: number
   deposit: number
-  balance?: number
-  seller?: string
+  balance: number
+  seller: string
 }
