@@ -285,7 +285,8 @@ export default function SalesForm() {
       if (supabaseError) throw new Error(supabaseError.message)
 
       const message = buildWhatsAppMessage(submissionData)
-      window.open(`https://wa.me/573222309034?text=${message}`, '_blank')
+      // Usar location.assign es mejor para móviles para evitar bloqueos de popups
+      window.location.assign(`https://wa.me/573222309034?text=${message}`)
 
       setSuccess(true)
       setForm({ ...INITIAL_FORM, date: new Date().toISOString().split('T')[0] })
