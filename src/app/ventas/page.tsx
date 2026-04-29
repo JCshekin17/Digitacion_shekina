@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import SalesForm from '@/components/SalesForm'
 
 export const dynamic = 'force-dynamic'
