@@ -104,6 +104,21 @@ export default function Dashboard() {
     }
   }, [])
 
+  const handleDelete = async (id: string, customer: string) => {
+    if (!window.confirm(`¿Estás seguro de eliminar la reserva de "${customer}"?`)) return
+    
+    const { error } = await supabase
+      .from('sales_records')
+      .delete()
+      .eq('id', id)
+
+    if (error) {
+      alert('Error al eliminar: ' + error.message)
+    } else {
+      setRecords(prev => prev.filter(r => r.id !== id))
+    }
+  }
+
   useEffect(() => {
     fetchData()
   }, [fetchData])
@@ -285,6 +300,7 @@ export default function Dashboard() {
                       <th>Servicio</th>
                       <th className="text-right">Total</th>
                       <th className="text-right">Saldo</th>
+                      <th className="text-center">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -300,6 +316,15 @@ export default function Dashboard() {
                           <span className={r.total_price - r.deposit > 0 ? 'text-orange-500 font-bold' : 'text-emerald-500'}>
                             {formatCurrency(r.total_price - r.deposit)}
                           </span>
+                        </td>
+                        <td className="text-center">
+                          <button 
+                            onClick={() => r.id && handleDelete(r.id, r.customer_name)}
+                            className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
+                            title="Eliminar Registro"
+                          >
+                            <span className="text-sm">🗑️</span>
+                          </button>
                         </td>
                       </tr>
                     ))}
