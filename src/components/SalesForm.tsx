@@ -17,7 +17,7 @@ const HOTELS = [
 ]
 
 // ── Estado inicial del formulario ────────────────────────────
-type FormState = Omit<SaleRecord, 'id' | 'created_at' | 'balance'> & { base_price: number }
+type FormState = Omit<SaleRecord, 'id' | 'created_at' | 'balance' | 'payment_proof_url'> & { base_price: number }
 
 const INITIAL_FORM: FormState = {
   date: new Date().toISOString().split('T')[0],
@@ -36,6 +36,7 @@ const INITIAL_FORM: FormState = {
   discount: 0,
   deposit: 0,
   seller: '',
+  payment_method: 'Efectivo',
 }
 
 function formatCurrency(value: number) {
@@ -73,6 +74,7 @@ function buildWhatsAppMessage(data: Omit<SaleRecord, 'id' | 'created_at'> & { ba
     data.discount ? `• Descuento: ${formatCurrency(data.discount)}` : null,
     `• Precio Total: ${formatCurrency(data.total_price)}`,
     `• Abono: ${formatCurrency(data.deposit)}`,
+    `• Método de Pago: ${data.payment_method || 'N/A'}`,
     `• *Saldo Pendiente: ${formatCurrency(data.balance)}*`,
     ``,
     `_Registrado en Reservas Shekina 2.0_`,
@@ -212,6 +214,7 @@ export default function SalesForm() {
   const [error, setError] = useState<string | null>(null)
   const [availableCities, setAvailableCities] = useState<string[]>([])
   const [customHotel, setCustomHotel] = useState('')
+  const [proofFile, setProofFile] = useState<File | null>(null)
 
   // Autocalcular balance
   useEffect(() => {
@@ -290,12 +293,38 @@ export default function SalesForm() {
     setError(null)
     setSuccess(false)
     try {
-      // Si el hotel es "OTRO", usamos el nombre personalizado
       const finalHotel = form.hotel === 'OTRO' ? customHotel : form.hotel
       const { base_price, discount, ...restForm } = form
-      // Pasamos el discount a supabase en caso de que la columna exista, si da error podríamos omitirlo,
-      // pero actualizamos la definición de SaleRecord así que está bien.
-      const submissionData = { ...restForm, discount, hotel: finalHotel, balance }
+
+      let payment_proof_url = ''
+      
+      // Subir archivo a Supabase Storage si existe
+      if (proofFile) {
+        const fileExt = proofFile.name.split('.').pop()
+        const fileName = `${Date.now()}_${Math.random()}.${fileExt}`
+        
+        const { error: uploadError } = await supabase.storage
+          .from('receipts')
+          .upload(fileName, proofFile)
+          
+        if (uploadError) {
+          throw new Error('Error al subir el comprobante: ' + uploadError.message)
+        }
+        
+        const { data: publicUrlData } = supabase.storage
+          .from('receipts')
+          .getPublicUrl(fileName)
+          
+        payment_proof_url = publicUrlData.publicUrl
+      }
+
+      const submissionData = { 
+        ...restForm, 
+        discount, 
+        hotel: finalHotel, 
+        balance,
+        ...(payment_proof_url ? { payment_proof_url } : {})
+      }
 
       const { error: supabaseError } = await supabase
         .from('sales_records')
@@ -311,6 +340,7 @@ export default function SalesForm() {
       setForm({ ...INITIAL_FORM, date: new Date().toISOString().split('T')[0] })
       setCustomHotel('')
       setBalance(0)
+      setProofFile(null)
       setTimeout(() => setSuccess(false), 5000)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Error desconocido al guardar')
@@ -602,8 +632,52 @@ export default function SalesForm() {
               </label>
               <input
                 id="balance_display" name="balance_display" type="text"
-                readOnly value={formatCurrency(balance)} className="input-corp"
+                readOnly value={formatCurrency(balance)} className="input-corp bg-black/20"
               />
+            </div>
+            
+            {/* Método de Pago y Comprobante */}
+            <div>
+              <label className="label-corp" htmlFor="payment_method">Método de Pago</label>
+              <select
+                id="payment_method" name="payment_method"
+                value={form.payment_method || 'Efectivo'} onChange={handleChange}
+                className="input-corp"
+                style={{
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                }}
+              >
+                <option value="Efectivo">Efectivo</option>
+                <option value="Transferencia">Transferencia</option>
+                <option value="Datafono">Datáfono</option>
+                <option value="Link de Pago">Link de Pago</option>
+              </select>
+            </div>
+            <div className="lg:col-span-2">
+              <label className="label-corp" htmlFor="payment_proof">Cargar Comprobante (Foto/Imagen)</label>
+              <div className="flex items-center gap-3">
+                <input
+                  id="payment_proof" name="payment_proof" type="file" accept="image/*"
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files.length > 0) {
+                      setProofFile(e.target.files[0])
+                    }
+                  }}
+                  className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-orange-500/10 file:text-orange-400 hover:file:bg-orange-500/20 file:transition-colors file:cursor-pointer"
+                />
+                {proofFile && (
+                  <button type="button" onClick={() => {
+                    setProofFile(null);
+                    const input = document.getElementById('payment_proof') as HTMLInputElement;
+                    if (input) input.value = '';
+                  }} className="text-red-400 hover:text-red-300 text-xs font-bold px-2 py-1 bg-red-400/10 rounded-lg">
+                    Quitar
+                  </button>
+                )}
+              </div>
             </div>
           </div>
 
@@ -635,6 +709,9 @@ export default function SalesForm() {
                 setForm({ ...INITIAL_FORM, date: new Date().toISOString().split('T')[0] })
                 setCustomHotel('')
                 setBalance(0)
+                setProofFile(null)
+                const fileInput = document.getElementById('payment_proof') as HTMLInputElement;
+                if (fileInput) fileInput.value = '';
                 setError(null)
                 setSuccess(false)
               }}

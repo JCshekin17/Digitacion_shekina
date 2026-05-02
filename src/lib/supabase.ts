@@ -25,4 +25,6 @@ export type SaleRecord = {
   deposit: number
   balance: number
   seller: string
+  payment_method?: string
+  payment_proof_url?: string
 }
