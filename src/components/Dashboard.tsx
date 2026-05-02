@@ -444,10 +444,10 @@ export default function Dashboard() {
                       <th className="text-right">Producción Bruta</th>
                       <th className="text-right">Recaudado</th>
                       <th className="text-right">Por Cobrar</th>
-                      {view === 'hotel' && (
+                      {(view === 'hotel' || view === 'seller') && (
                         <>
                           <th className="text-right">Ingreso Neto</th>
-                          <th className="text-right text-orange-400">Comisión (30%)</th>
+                          <th className="text-right text-orange-400">Comisión ({view === 'hotel' ? '30' : '15'}%)</th>
                         </>
                       )}
                     </tr>
@@ -462,10 +462,10 @@ export default function Dashboard() {
                         <td className="text-right text-white font-black">{formatCurrency(val.total)}</td>
                         <td className="text-right text-emerald-400">{formatCurrency(val.deposit)}</td>
                         <td className="text-right text-orange-400 font-bold">{formatCurrency(val.total - val.deposit)}</td>
-                        {view === 'hotel' && (
+                        {(view === 'hotel' || view === 'seller') && (
                           <>
                             <td className="text-right text-emerald-400 font-bold">{formatCurrency(val.total - (val as any).cost)}</td>
-                            <td className="text-right text-orange-400 font-black">{formatCurrency((val.total - (val as any).cost) * 0.30)}</td>
+                            <td className="text-right text-orange-400 font-black">{formatCurrency((val.total - (val as any).cost) * (view === 'hotel' ? 0.30 : 0.15))}</td>
                           </>
                         )}
                       </tr>
@@ -478,10 +478,10 @@ export default function Dashboard() {
                       <td className="text-right font-black text-white">{formatCurrency(kpis.total_sales)}</td>
                       <td className="text-right font-black text-emerald-400">{formatCurrency(kpis.total_deposits)}</td>
                       <td className="text-right font-black text-orange-400">{formatCurrency(kpis.total_balance)}</td>
-                      {view === 'hotel' && (
+                      {(view === 'hotel' || view === 'seller') && (
                         <>
                           <td className="text-right font-black text-emerald-400">{formatCurrency(kpis.total_sales - kpis.total_cost)}</td>
-                          <td className="text-right font-black text-orange-400">{formatCurrency((kpis.total_sales - kpis.total_cost) * 0.30)}</td>
+                          <td className="text-right font-black text-orange-400">{formatCurrency((kpis.total_sales - kpis.total_cost) * (view === 'hotel' ? 0.30 : 0.15))}</td>
                         </>
                       )}
                     </tr>
