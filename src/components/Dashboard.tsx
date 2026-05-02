@@ -470,9 +470,9 @@ export default function Dashboard() {
                     <tr>
                       <th>{view === 'hotel' ? 'Hotel' : view === 'seller' ? 'Asesor' : view === 'cash' ? 'Hotel (Solo Efectivo)' : 'Mes'}</th>
                       <th className="text-center">Cant. Reservas</th>
-                      <th className="text-right">Producción Bruta</th>
-                      <th className="text-right">Recaudado</th>
-                      <th className="text-right">Por Cobrar</th>
+                      {view !== 'cash' && <th className="text-right">Producción Bruta</th>}
+                      <th className="text-right">{view === 'cash' ? 'Efectivo en Caja (Abono)' : 'Recaudado'}</th>
+                      {view !== 'cash' && <th className="text-right">Por Cobrar</th>}
                       {(view === 'hotel' || view === 'seller') && (
                         <th className="text-right text-orange-400">
                           {view === 'seller' ? 'Ingreso Asesor' : 'Comisión'}
@@ -487,9 +487,9 @@ export default function Dashboard() {
                         <td className="text-center">
                           <span className="badge badge-blue">{val.count}</span>
                         </td>
-                        <td className="text-right text-white font-black">{formatCurrency(val.total)}</td>
-                        <td className="text-right text-emerald-400">{formatCurrency(val.deposit)}</td>
-                        <td className="text-right text-orange-400 font-bold">{formatCurrency(val.total - val.deposit)}</td>
+                        {view !== 'cash' && <td className="text-right text-white font-black">{formatCurrency(val.total)}</td>}
+                        <td className="text-right text-emerald-400 font-bold">{formatCurrency(val.deposit)}</td>
+                        {view !== 'cash' && <td className="text-right text-orange-400 font-bold">{formatCurrency(val.total - val.deposit)}</td>}
                         {(view === 'hotel' || view === 'seller') && (
                           <td className="text-right text-orange-400 font-black">{formatCurrency((val.total - (val as any).cost) * (view === 'hotel' ? 0.30 : 0.15))}</td>
                         )}
@@ -502,15 +502,19 @@ export default function Dashboard() {
                       <td className="text-center font-bold text-white">
                         {view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').length : filtered.length}
                       </td>
-                      <td className="text-right font-black text-white">
-                        {formatCurrency(view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').reduce((sum, r) => sum + (r.total_price || 0), 0) : kpis.total_sales)}
-                      </td>
+                      {view !== 'cash' && (
+                        <td className="text-right font-black text-white">
+                          {formatCurrency(kpis.total_sales)}
+                        </td>
+                      )}
                       <td className="text-right font-black text-emerald-400">
                         {formatCurrency(view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').reduce((sum, r) => sum + (r.deposit || 0), 0) : kpis.total_deposits)}
                       </td>
-                      <td className="text-right font-black text-orange-400">
-                        {formatCurrency(view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').reduce((sum, r) => sum + (r.balance ?? (r.total_price - r.deposit)), 0) : kpis.total_balance)}
-                      </td>
+                      {view !== 'cash' && (
+                        <td className="text-right font-black text-orange-400">
+                          {formatCurrency(kpis.total_balance)}
+                        </td>
+                      )}
                       {(view === 'hotel' || view === 'seller') && (
                         <td className="text-right font-black text-orange-400">{formatCurrency((kpis.total_sales - kpis.total_cost) * (view === 'hotel' ? 0.30 : 0.15))}</td>
                       )}
