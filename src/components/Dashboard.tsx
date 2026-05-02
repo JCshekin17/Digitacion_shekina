@@ -387,6 +387,8 @@ export default function Dashboard() {
                       <th className="text-right">Ingreso Bruto</th>
                       <th className="text-right">Costo Total</th>
                       <th className="text-right text-emerald-400">Ingreso Neto</th>
+                      <th className="text-right text-orange-400">Comisiones (45%)</th>
+                      <th className="text-right text-blue-400">Utilidad Final</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -397,6 +399,8 @@ export default function Dashboard() {
                       
                       const totalCost = unitCost * val.pax
                       const netIncome = val.total - totalCost
+                      const commissions = netIncome * 0.45
+                      const finalProfit = netIncome - commissions
 
                       return (
                         <tr key={key}>
@@ -409,6 +413,8 @@ export default function Dashboard() {
                           <td className="text-right text-white font-bold">{formatCurrency(val.total)}</td>
                           <td className="text-right text-red-400 font-bold">-{formatCurrency(totalCost)}</td>
                           <td className="text-right text-emerald-400 font-black">{formatCurrency(netIncome)}</td>
+                          <td className="text-right text-orange-400 font-bold">-{formatCurrency(commissions)}</td>
+                          <td className="text-right text-blue-400 font-black">{formatCurrency(finalProfit)}</td>
                         </tr>
                       )
                     })}
@@ -431,6 +437,18 @@ export default function Dashboard() {
                           const s = SERVICES.find(s => s.name === key)
                           return acc + ((s?.cost || 0) * val.pax)
                         }, 0))}
+                      </td>
+                      <td className="text-right font-black text-orange-400">
+                        -{formatCurrency((kpis.total_sales - summaries.product.reduce((acc, [key, val]) => {
+                          const s = SERVICES.find(s => s.name === key)
+                          return acc + ((s?.cost || 0) * val.pax)
+                        }, 0)) * 0.45)}
+                      </td>
+                      <td className="text-right font-black text-blue-400">
+                        {formatCurrency((kpis.total_sales - summaries.product.reduce((acc, [key, val]) => {
+                          const s = SERVICES.find(s => s.name === key)
+                          return acc + ((s?.cost || 0) * val.pax)
+                        }, 0)) * 0.55)}
                       </td>
                     </tr>
                   </tfoot>
