@@ -463,7 +463,9 @@ export default function Dashboard() {
                       <th className="text-right">Recaudado</th>
                       <th className="text-right">Por Cobrar</th>
                       {(view === 'hotel' || view === 'seller') && (
-                        <th className="text-right text-orange-400">Comisión</th>
+                        <th className="text-right text-orange-400">
+                          {view === 'seller' ? 'Ingreso Asesor' : 'Comisión'}
+                        </th>
                       )}
                     </tr>
                   </thead>
