@@ -78,6 +78,7 @@ interface KPIs {
 }
 
 type DashboardView = 'list' | 'hotel' | 'seller' | 'month'
+const ITEMS_PER_PAGE = 15
 
 export default function Dashboard() {
   const [records, setRecords] = useState<SaleRecord[]>([])
@@ -85,6 +86,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [searchTerm, setSearchTerm] = useState('')
+  const [currentPage, setCurrentPage] = useState(1)
+  const [editingRecord, setEditingRecord] = useState<SaleRecord | null>(null)
+  const [savingEdit, setSavingEdit] = useState(false)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -133,6 +137,17 @@ export default function Dashboard() {
         r.seller?.toLowerCase().includes(searchTerm.toLowerCase())
     )
   }, [records, searchTerm])
+
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, view])
+
+  const paginatedList = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE
+    return filtered.slice(start, start + ITEMS_PER_PAGE)
+  }, [filtered, currentPage])
+  
+  const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
 
   const kpis = useMemo(() => {
     const totalSales = filtered.reduce((sum, r) => sum + (r.total_price || 0), 0)
@@ -304,7 +319,7 @@ export default function Dashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filtered.map((r) => (
+                    {paginatedList.map((r) => (
                       <tr key={r.id}>
                         <td className="text-[10px]">{r.date}</td>
                         <td className="text-white font-medium">{r.customer_name}</td>
@@ -317,7 +332,14 @@ export default function Dashboard() {
                             {formatCurrency(r.total_price - r.deposit)}
                           </span>
                         </td>
-                        <td className="text-center">
+                        <td className="text-center whitespace-nowrap">
+                          <button 
+                            onClick={() => setEditingRecord(r)}
+                            className="p-2 text-slate-500 hover:text-blue-400 hover:bg-blue-400/10 rounded-lg transition-all mr-1"
+                            title="Editar Registro"
+                          >
+                            <span className="text-sm">✏️</span>
+                          </button>
                           <button 
                             onClick={() => r.id && handleDelete(r.id, r.customer_name)}
                             className="p-2 text-slate-500 hover:text-red-400 hover:bg-red-400/10 rounded-lg transition-all"
@@ -367,8 +389,107 @@ export default function Dashboard() {
               )}
             </table>
           )}
+          
+          {view === 'list' && filtered.length > ITEMS_PER_PAGE && (
+            <div className="p-4 border-t border-white/5 flex items-center justify-between">
+              <span className="text-xs text-slate-400">
+                Mostrando {(currentPage - 1) * ITEMS_PER_PAGE + 1} a {Math.min(currentPage * ITEMS_PER_PAGE, filtered.length)} de {filtered.length}
+              </span>
+              <div className="flex gap-2">
+                <button
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage(prev => prev - 1)}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg disabled:opacity-30 text-xs text-white transition-colors"
+                >
+                  Anterior
+                </button>
+                <button
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  className="px-3 py-1.5 bg-white/5 hover:bg-white/10 rounded-lg disabled:opacity-30 text-xs text-white transition-colors"
+                >
+                  Siguiente
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Modal de Edición */}
+      {editingRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="bg-[#0d1f38] border border-orange-500/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl overflow-y-auto max-h-[90vh]">
+            <h3 className="text-lg font-black text-white mb-4 flex items-center gap-2">
+              <span>✏️</span> Editar Reserva
+            </h3>
+            <form onSubmit={async (e) => {
+              e.preventDefault()
+              setSavingEdit(true)
+              try {
+                const updatedBalance = editingRecord.total_price - editingRecord.deposit
+                const { error } = await supabase
+                  .from('sales_records')
+                  .update({
+                    customer_name: editingRecord.customer_name,
+                    phone: editingRecord.phone,
+                    hotel: editingRecord.hotel,
+                    service: editingRecord.service,
+                    total_price: editingRecord.total_price,
+                    deposit: editingRecord.deposit,
+                    balance: updatedBalance
+                  })
+                  .eq('id', editingRecord.id)
+                if (error) throw error
+                setRecords(prev => prev.map(r => r.id === editingRecord.id ? {...editingRecord, balance: updatedBalance} : r))
+                setEditingRecord(null)
+              } catch (err) {
+                alert('Error al guardar cambios: ' + (err instanceof Error ? err.message : 'Error desconocido'))
+              } finally {
+                setSavingEdit(false)
+              }
+            }} className="space-y-4">
+              <div>
+                <label className="label-corp">Nombre del Cliente</label>
+                <input type="text" value={editingRecord.customer_name} onChange={e => setEditingRecord({...editingRecord, customer_name: e.target.value})} className="input-corp" required />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label-corp">Teléfono</label>
+                  <input type="text" value={editingRecord.phone || ''} onChange={e => setEditingRecord({...editingRecord, phone: e.target.value})} className="input-corp" />
+                </div>
+                <div>
+                  <label className="label-corp">Hotel</label>
+                  <input type="text" value={editingRecord.hotel || ''} onChange={e => setEditingRecord({...editingRecord, hotel: e.target.value})} className="input-corp" />
+                </div>
+              </div>
+              <div>
+                <label className="label-corp">Servicio / Destino</label>
+                <input type="text" value={editingRecord.service || ''} onChange={e => setEditingRecord({...editingRecord, service: e.target.value})} className="input-corp" />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="label-corp">Precio Total (COP)</label>
+                  <input type="number" value={editingRecord.total_price || 0} onChange={e => setEditingRecord({...editingRecord, total_price: Number(e.target.value)})} className="input-corp" required />
+                </div>
+                <div>
+                  <label className="label-corp">Abono (COP)</label>
+                  <input type="number" value={editingRecord.deposit || 0} onChange={e => setEditingRecord({...editingRecord, deposit: Number(e.target.value)})} className="input-corp" required />
+                </div>
+              </div>
+              
+              <div className="flex gap-3 justify-end mt-8 pt-4 border-t border-white/10">
+                <button type="button" disabled={savingEdit} onClick={() => setEditingRecord(null)} className="px-5 py-2 text-sm font-bold text-slate-400 hover:text-white transition-colors">
+                  Cancelar
+                </button>
+                <button type="submit" disabled={savingEdit} className="btn-primary py-2 px-6">
+                  {savingEdit ? 'Guardando...' : '💾 Guardar Cambios'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

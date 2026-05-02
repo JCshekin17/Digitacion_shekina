@@ -421,16 +421,24 @@ export default function SalesForm() {
               <input
                 id="phone" name="phone" type="tel"
                 placeholder="+57 300 000 0000"
-                value={form.phone} onChange={handleChange} className="input-corp"
+                value={form.phone} onChange={handleChange} 
+                className={`input-corp ${form.phone && !/^\+?\d{8,15}$/.test(form.phone.replace(/\s+/g, '')) ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : ''}`}
               />
+              {form.phone && !/^\+?\d{8,15}$/.test(form.phone.replace(/\s+/g, '')) && (
+                <p className="text-[10px] text-red-400 mt-1">Formato de teléfono no válido</p>
+              )}
             </div>
             <div>
               <label className="label-corp" htmlFor="email">Correo Electrónico</label>
               <input
                 id="email" name="email" type="email"
                 placeholder="cliente@email.com"
-                value={form.email} onChange={handleChange} className="input-corp"
+                value={form.email} onChange={handleChange} 
+                className={`input-corp ${form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) ? 'border-red-500/50 focus:border-red-500 focus:ring-red-500/20' : ''}`}
               />
+              {form.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email) && (
+                <p className="text-[10px] text-red-400 mt-1">Formato de correo no válido</p>
+              )}
             </div>
 
             {/* País — combobox con autocompletado */}
@@ -582,25 +590,41 @@ export default function SalesForm() {
 
         {/* Submit */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:justify-between pt-2 pb-4 sm:pb-0">
-          <p className="text-slate-500 text-xs order-2 sm:order-1 text-center sm:text-left">
+          <p className="text-slate-500 text-xs order-3 sm:order-1 text-center sm:text-left">
             * Campos obligatorios. Al guardar se abrirá WhatsApp con el resumen.
           </p>
-          <button
-            type="submit" disabled={loading}
-            className="btn-primary order-1 sm:order-2" id="submit-sale-btn"
-          >
-            {loading ? (
-              <>
-                <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
-                Guardando...
-              </>
-            ) : (
-              <>💾 Guardar Reserva</>
-            )}
-          </button>
+          <div className="flex gap-2 order-1 sm:order-2 flex-col sm:flex-row">
+            <button
+              type="button"
+              onClick={() => {
+                setForm({ ...INITIAL_FORM, date: new Date().toISOString().split('T')[0] })
+                setCustomHotel('')
+                setBalance(0)
+                setError(null)
+                setSuccess(false)
+              }}
+              disabled={loading}
+              className="px-4 py-3 sm:py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-xl border border-white/5 font-bold text-sm transition-all"
+            >
+              🧹 Limpiar
+            </button>
+            <button
+              type="submit" disabled={loading}
+              className="btn-primary flex-1 sm:flex-none" id="submit-sale-btn"
+            >
+              {loading ? (
+                <>
+                  <svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Guardando...
+                </>
+              ) : (
+                <>💾 Guardar Reserva</>
+              )}
+            </button>
+          </div>
         </div>
       </form>
     </div>
