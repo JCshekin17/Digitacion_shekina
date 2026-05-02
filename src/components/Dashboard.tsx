@@ -79,7 +79,7 @@ interface KPIs {
   total_cost: number
 }
 
-type DashboardView = 'list' | 'hotel' | 'seller' | 'month' | 'product'
+type DashboardView = 'list' | 'hotel' | 'seller' | 'month' | 'product' | 'cash'
 const ITEMS_PER_PAGE = 15
 
 export default function Dashboard() {
@@ -172,6 +172,7 @@ export default function Dashboard() {
     const bySeller: Record<string, { count: number; total: number; deposit: number; cost: number }> = {}
     const byMonth: Record<string, { count: number; total: number; deposit: number; cost: number }> = {}
     const byService: Record<string, { count: number; total: number; deposit: number; pax: number }> = {}
+    const byCash: Record<string, { count: number; total: number; deposit: number; cost: number }> = {}
 
     filtered.forEach((r) => {
       const h = r.hotel || 'Sin Hotel'
@@ -210,6 +211,14 @@ export default function Dashboard() {
       byService[srv].total += amt
       byService[srv].deposit += dep
       byService[srv].pax += pax
+      
+      if (r.payment_method === 'Efectivo') {
+        if (!byCash[h]) byCash[h] = { count: 0, total: 0, deposit: 0, cost: 0 }
+        byCash[h].count++
+        byCash[h].total += amt
+        byCash[h].deposit += dep
+        byCash[h].cost += cost
+      }
     })
 
     return {
@@ -217,6 +226,7 @@ export default function Dashboard() {
       seller: Object.entries(bySeller).sort((a, b) => b[1].total - a[1].total),
       month: Object.entries(byMonth).sort((a, b) => b[0].localeCompare(a[0])),
       product: Object.entries(byService).sort((a, b) => b[1].total - a[1].total),
+      cash: Object.entries(byCash).sort((a, b) => b[1].deposit - a[1].deposit),
     }
   }, [filtered])
 
@@ -282,6 +292,7 @@ export default function Dashboard() {
           { id: 'seller', label: 'Por Asesor', icon: '👤' },
           { id: 'month', label: 'Por Mes', icon: '📅' },
           { id: 'product', label: 'Rentabilidad / Ingreso Neto', icon: '📈' },
+          { id: 'cash', label: 'Caja (Efectivo)', icon: '💵' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -304,7 +315,7 @@ export default function Dashboard() {
         <div className="flex flex-col gap-3 p-4 sm:p-5 border-b border-white/5">
           <div className="flex items-center justify-between">
             <h2 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
-              {view === 'list' ? 'Registros Detallados' : view === 'product' ? 'Tabla de Precios e Ingreso Neto' : `Resumen ${view === 'hotel' ? 'por Hotel' : view === 'seller' ? 'por Asesor' : 'por Mes'}`}
+              {view === 'list' ? 'Registros Detallados' : view === 'product' ? 'Tabla de Precios e Ingreso Neto' : view === 'cash' ? 'Efectivo en Caja por Hotel' : `Resumen ${view === 'hotel' ? 'por Hotel' : view === 'seller' ? 'por Asesor' : 'por Mes'}`}
             </h2>
             <button onClick={fetchData} className="btn-secondary p-2 text-xs">🔄</button>
           </div>
@@ -457,7 +468,7 @@ export default function Dashboard() {
                 <>
                   <thead>
                     <tr>
-                      <th>{view === 'hotel' ? 'Hotel' : view === 'seller' ? 'Asesor' : 'Mes'}</th>
+                      <th>{view === 'hotel' ? 'Hotel' : view === 'seller' ? 'Asesor' : view === 'cash' ? 'Hotel (Solo Efectivo)' : 'Mes'}</th>
                       <th className="text-center">Cant. Reservas</th>
                       <th className="text-right">Producción Bruta</th>
                       <th className="text-right">Recaudado</th>
@@ -488,10 +499,18 @@ export default function Dashboard() {
                   <tfoot>
                     <tr className="bg-white/5 border-t-2 border-orange-500/30">
                       <td className="font-black text-white text-xs py-4 uppercase">TOTALES</td>
-                      <td className="text-center font-bold text-white">{filtered.length}</td>
-                      <td className="text-right font-black text-white">{formatCurrency(kpis.total_sales)}</td>
-                      <td className="text-right font-black text-emerald-400">{formatCurrency(kpis.total_deposits)}</td>
-                      <td className="text-right font-black text-orange-400">{formatCurrency(kpis.total_balance)}</td>
+                      <td className="text-center font-bold text-white">
+                        {view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').length : filtered.length}
+                      </td>
+                      <td className="text-right font-black text-white">
+                        {formatCurrency(view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').reduce((sum, r) => sum + (r.total_price || 0), 0) : kpis.total_sales)}
+                      </td>
+                      <td className="text-right font-black text-emerald-400">
+                        {formatCurrency(view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').reduce((sum, r) => sum + (r.deposit || 0), 0) : kpis.total_deposits)}
+                      </td>
+                      <td className="text-right font-black text-orange-400">
+                        {formatCurrency(view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').reduce((sum, r) => sum + (r.balance ?? (r.total_price - r.deposit)), 0) : kpis.total_balance)}
+                      </td>
                       {(view === 'hotel' || view === 'seller') && (
                         <td className="text-right font-black text-orange-400">{formatCurrency((kpis.total_sales - kpis.total_cost) * (view === 'hotel' ? 0.30 : 0.15))}</td>
                       )}
