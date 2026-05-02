@@ -76,6 +76,7 @@ interface KPIs {
   total_sales: number
   total_deposits: number
   total_balance: number
+  total_cost: number
 }
 
 type DashboardView = 'list' | 'hotel' | 'seller' | 'month' | 'product'
@@ -157,14 +158,19 @@ export default function Dashboard() {
       (sum, r) => sum + (r.balance ?? r.total_price - r.deposit),
       0
     )
-    return { total_sales: totalSales, total_deposits: totalDeposits, total_balance: totalBalance }
+    const totalCost = filtered.reduce((sum, r) => {
+      const srv = SERVICES.find(s => s.name === r.service)
+      return sum + ((srv?.cost || 0) * (r.pax || 1))
+    }, 0)
+    
+    return { total_sales: totalSales, total_deposits: totalDeposits, total_balance: totalBalance, total_cost: totalCost }
   }, [filtered])
 
   // Lógica de resúmenes
   const summaries = useMemo(() => {
-    const byHotel: Record<string, { count: number; total: number; deposit: number }> = {}
-    const bySeller: Record<string, { count: number; total: number; deposit: number }> = {}
-    const byMonth: Record<string, { count: number; total: number; deposit: number }> = {}
+    const byHotel: Record<string, { count: number; total: number; deposit: number; cost: number }> = {}
+    const bySeller: Record<string, { count: number; total: number; deposit: number; cost: number }> = {}
+    const byMonth: Record<string, { count: number; total: number; deposit: number; cost: number }> = {}
     const byService: Record<string, { count: number; total: number; deposit: number; pax: number }> = {}
 
     filtered.forEach((r) => {
@@ -173,26 +179,32 @@ export default function Dashboard() {
       const m = r.date ? r.date.substring(0, 7) : 'Sin Fecha' // YYYY-MM
       const srv = r.service || 'Sin Servicio'
 
-      if (!byHotel[h]) byHotel[h] = { count: 0, total: 0, deposit: 0 }
-      if (!bySeller[s]) bySeller[s] = { count: 0, total: 0, deposit: 0 }
-      if (!byMonth[m]) byMonth[m] = { count: 0, total: 0, deposit: 0 }
+      if (!byHotel[h]) byHotel[h] = { count: 0, total: 0, deposit: 0, cost: 0 }
+      if (!bySeller[s]) bySeller[s] = { count: 0, total: 0, deposit: 0, cost: 0 }
+      if (!byMonth[m]) byMonth[m] = { count: 0, total: 0, deposit: 0, cost: 0 }
       if (!byService[srv]) byService[srv] = { count: 0, total: 0, deposit: 0, pax: 0 }
 
       const amt = r.total_price || 0
       const dep = r.deposit || 0
       const pax = r.pax || 1
+      
+      const serviceInfo = SERVICES.find(serv => serv.name === r.service)
+      const cost = (serviceInfo?.cost || 0) * pax
 
       byHotel[h].count++
       byHotel[h].total += amt
       byHotel[h].deposit += dep
+      byHotel[h].cost += cost
 
       bySeller[s].count++
       bySeller[s].total += amt
       bySeller[s].deposit += dep
+      bySeller[s].cost += cost
 
       byMonth[m].count++
       byMonth[m].total += amt
       byMonth[m].deposit += dep
+      byMonth[m].cost += cost
 
       byService[srv].count++
       byService[srv].total += amt
@@ -432,6 +444,12 @@ export default function Dashboard() {
                       <th className="text-right">Producción Bruta</th>
                       <th className="text-right">Recaudado</th>
                       <th className="text-right">Por Cobrar</th>
+                      {view === 'hotel' && (
+                        <>
+                          <th className="text-right">Ingreso Neto</th>
+                          <th className="text-right text-orange-400">Comisión (30%)</th>
+                        </>
+                      )}
                     </tr>
                   </thead>
                   <tbody>
@@ -444,6 +462,12 @@ export default function Dashboard() {
                         <td className="text-right text-white font-black">{formatCurrency(val.total)}</td>
                         <td className="text-right text-emerald-400">{formatCurrency(val.deposit)}</td>
                         <td className="text-right text-orange-400 font-bold">{formatCurrency(val.total - val.deposit)}</td>
+                        {view === 'hotel' && (
+                          <>
+                            <td className="text-right text-emerald-400 font-bold">{formatCurrency(val.total - (val as any).cost)}</td>
+                            <td className="text-right text-orange-400 font-black">{formatCurrency((val.total - (val as any).cost) * 0.30)}</td>
+                          </>
+                        )}
                       </tr>
                     ))}
                   </tbody>
@@ -454,6 +478,12 @@ export default function Dashboard() {
                       <td className="text-right font-black text-white">{formatCurrency(kpis.total_sales)}</td>
                       <td className="text-right font-black text-emerald-400">{formatCurrency(kpis.total_deposits)}</td>
                       <td className="text-right font-black text-orange-400">{formatCurrency(kpis.total_balance)}</td>
+                      {view === 'hotel' && (
+                        <>
+                          <td className="text-right font-black text-emerald-400">{formatCurrency(kpis.total_sales - kpis.total_cost)}</td>
+                          <td className="text-right font-black text-orange-400">{formatCurrency((kpis.total_sales - kpis.total_cost) * 0.30)}</td>
+                        </>
+                      )}
                     </tr>
                   </tfoot>
                 </>
