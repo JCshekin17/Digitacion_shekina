@@ -21,6 +21,7 @@ export type SaleRecord = {
   pax: number
   service: string
   total_price: number
+  discount?: number
   deposit: number
   balance: number
   seller: string

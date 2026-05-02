@@ -17,7 +17,9 @@ const HOTELS = [
 ]
 
 // ── Estado inicial del formulario ────────────────────────────
-const INITIAL_FORM: Omit<SaleRecord, 'id' | 'created_at' | 'balance'> = {
+type FormState = Omit<SaleRecord, 'id' | 'created_at' | 'balance'> & { base_price: number }
+
+const INITIAL_FORM: FormState = {
   date: new Date().toISOString().split('T')[0],
   customer_name: '',
   passport_id: '',
@@ -30,6 +32,8 @@ const INITIAL_FORM: Omit<SaleRecord, 'id' | 'created_at' | 'balance'> = {
   pax: 1,
   service: '',
   total_price: 0,
+  base_price: 0,
+  discount: 0,
   deposit: 0,
   seller: '',
 }
@@ -65,12 +69,14 @@ function buildWhatsAppMessage(data: Omit<SaleRecord, 'id' | 'created_at'> & { ba
     `• Asesor: ${data.seller || 'N/A'}`,
     ``,
     `💰 *FINANCIERO*`,
+    `• Valor del Producto: ${formatCurrency(data.total_price + (data.discount || 0))}`,
+    data.discount ? `• Descuento: ${formatCurrency(data.discount)}` : null,
     `• Precio Total: ${formatCurrency(data.total_price)}`,
     `• Abono: ${formatCurrency(data.deposit)}`,
     `• *Saldo Pendiente: ${formatCurrency(data.balance)}*`,
     ``,
     `_Registrado en Reservas Shekina 2.0_`,
-  ]
+  ].filter(line => line !== null)
   return encodeURIComponent(lines.join('\n'))
 }
 
@@ -240,12 +246,18 @@ export default function SalesForm() {
       setForm((prev) => {
         const next = { ...prev, [name]: finalValue }
         
-        // Si cambia PAX, recalculamos total_price basándonos en el servicio actual
         if (name === 'pax') {
           const service = SERVICES.find((s) => s.name === prev.service)
           if (service) {
-            next.total_price = service.price * (next.pax as number)
+            next.base_price = service.price * (next.pax as number)
+            next.total_price = next.base_price - (next.discount || 0)
           }
+        } else if (name === 'discount') {
+          next.total_price = Math.max(0, (next.base_price || 0) - (finalValue as number))
+        } else if (name === 'base_price') {
+          next.total_price = Math.max(0, (finalValue as number) - (next.discount || 0))
+        } else if (name === 'total_price') {
+          next.base_price = (finalValue as number) + (next.discount || 0)
         }
         
         return next
@@ -261,11 +273,15 @@ export default function SalesForm() {
   const handleServiceChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedName = e.target.value
     const service = SERVICES.find((s) => s.name === selectedName)
-    setForm((prev) => ({
-      ...prev,
-      service: selectedName,
-      total_price: service ? service.price * prev.pax : prev.total_price,
-    }))
+    setForm((prev) => {
+      const base = service ? service.price * prev.pax : prev.base_price
+      return {
+        ...prev,
+        service: selectedName,
+        base_price: base,
+        total_price: Math.max(0, base - (prev.discount || 0)),
+      }
+    })
   }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -276,7 +292,10 @@ export default function SalesForm() {
     try {
       // Si el hotel es "OTRO", usamos el nombre personalizado
       const finalHotel = form.hotel === 'OTRO' ? customHotel : form.hotel
-      const submissionData = { ...form, hotel: finalHotel, balance }
+      const { base_price, discount, ...restForm } = form
+      // Pasamos el discount a supabase en caso de que la columna exista, si da error podríamos omitirlo,
+      // pero actualizamos la definición de SaleRecord así que está bien.
+      const submissionData = { ...restForm, discount, hotel: finalHotel, balance }
 
       const { error: supabaseError } = await supabase
         .from('sales_records')
@@ -544,6 +563,22 @@ export default function SalesForm() {
             <span className="inline-block flex-1 h-px bg-orange-400/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div>
+              <label className="label-corp" htmlFor="base_price">Valor del Producto (COP) *</label>
+              <input
+                id="base_price" name="base_price" type="number"
+                min="0" step="1000" required placeholder="0"
+                value={form.base_price || ''} onChange={handleChange} className="input-corp"
+              />
+            </div>
+            <div>
+              <label className="label-corp" htmlFor="discount">Descuento (COP)</label>
+              <input
+                id="discount" name="discount" type="number"
+                min="0" step="1000" placeholder="0"
+                value={form.discount || ''} onChange={handleChange} className="input-corp"
+              />
+            </div>
             <div>
               <label className="label-corp" htmlFor="total_price">Precio Total (COP) *</label>
               <input
