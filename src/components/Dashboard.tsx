@@ -387,7 +387,7 @@ export default function Dashboard() {
                       <th className="text-right">Ingreso Bruto</th>
                       <th className="text-right">Costo Total</th>
                       <th className="text-right text-emerald-400">Ingreso Neto</th>
-                      <th className="text-right text-orange-400">Comisiones (45%)</th>
+                      <th className="text-right text-orange-400">Comisiones</th>
                       <th className="text-right text-blue-400">Utilidad Final</th>
                     </tr>
                   </thead>
@@ -463,7 +463,7 @@ export default function Dashboard() {
                       <th className="text-right">Recaudado</th>
                       <th className="text-right">Por Cobrar</th>
                       {(view === 'hotel' || view === 'seller') && (
-                        <th className="text-right text-orange-400">Comisión ({view === 'hotel' ? '30' : '15'}%)</th>
+                        <th className="text-right text-orange-400">Comisión</th>
                       )}
                     </tr>
                   </thead>
