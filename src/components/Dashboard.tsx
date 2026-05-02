@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase, type SaleRecord } from '@/lib/supabase'
+import { SERVICES } from '@/lib/services'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -77,7 +78,7 @@ interface KPIs {
   total_balance: number
 }
 
-type DashboardView = 'list' | 'hotel' | 'seller' | 'month'
+type DashboardView = 'list' | 'hotel' | 'seller' | 'month' | 'product'
 const ITEMS_PER_PAGE = 15
 
 export default function Dashboard() {
@@ -164,18 +165,22 @@ export default function Dashboard() {
     const byHotel: Record<string, { count: number; total: number; deposit: number }> = {}
     const bySeller: Record<string, { count: number; total: number; deposit: number }> = {}
     const byMonth: Record<string, { count: number; total: number; deposit: number }> = {}
+    const byService: Record<string, { count: number; total: number; deposit: number; pax: number }> = {}
 
     filtered.forEach((r) => {
       const h = r.hotel || 'Sin Hotel'
       const s = r.seller || 'Sin Asesor'
       const m = r.date ? r.date.substring(0, 7) : 'Sin Fecha' // YYYY-MM
+      const srv = r.service || 'Sin Servicio'
 
       if (!byHotel[h]) byHotel[h] = { count: 0, total: 0, deposit: 0 }
       if (!bySeller[s]) bySeller[s] = { count: 0, total: 0, deposit: 0 }
       if (!byMonth[m]) byMonth[m] = { count: 0, total: 0, deposit: 0 }
+      if (!byService[srv]) byService[srv] = { count: 0, total: 0, deposit: 0, pax: 0 }
 
       const amt = r.total_price || 0
       const dep = r.deposit || 0
+      const pax = r.pax || 1
 
       byHotel[h].count++
       byHotel[h].total += amt
@@ -188,12 +193,18 @@ export default function Dashboard() {
       byMonth[m].count++
       byMonth[m].total += amt
       byMonth[m].deposit += dep
+
+      byService[srv].count++
+      byService[srv].total += amt
+      byService[srv].deposit += dep
+      byService[srv].pax += pax
     })
 
     return {
       hotel: Object.entries(byHotel).sort((a, b) => b[1].total - a[1].total),
       seller: Object.entries(bySeller).sort((a, b) => b[1].total - a[1].total),
       month: Object.entries(byMonth).sort((a, b) => b[0].localeCompare(a[0])),
+      product: Object.entries(byService).sort((a, b) => b[1].total - a[1].total),
     }
   }, [filtered])
 
@@ -258,6 +269,7 @@ export default function Dashboard() {
           { id: 'hotel', label: 'Por Hotel', icon: '🏨' },
           { id: 'seller', label: 'Por Asesor', icon: '👤' },
           { id: 'month', label: 'Por Mes', icon: '📅' },
+          { id: 'product', label: 'Rentabilidad / Ingreso Neto', icon: '📈' },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -280,7 +292,7 @@ export default function Dashboard() {
         <div className="flex flex-col gap-3 p-4 sm:p-5 border-b border-white/5">
           <div className="flex items-center justify-between">
             <h2 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
-              {view === 'list' ? 'Registros Detallados' : `Resumen ${view === 'hotel' ? 'por Hotel' : view === 'seller' ? 'por Asesor' : 'por Mes'}`}
+              {view === 'list' ? 'Registros Detallados' : view === 'product' ? 'Tabla de Precios e Ingreso Neto' : `Resumen ${view === 'hotel' ? 'por Hotel' : view === 'seller' ? 'por Asesor' : 'por Mes'}`}
             </h2>
             <button onClick={fetchData} className="btn-secondary p-2 text-xs">🔄</button>
           </div>
@@ -351,6 +363,65 @@ export default function Dashboard() {
                       </tr>
                     ))}
                   </tbody>
+                </>
+              ) : view === 'product' ? (
+                <>
+                  <thead>
+                    <tr>
+                      <th>Producto / Servicio</th>
+                      <th className="text-center">Pax Vendidos</th>
+                      <th className="text-right">Precio Unit.</th>
+                      <th className="text-right">Costo Unit.</th>
+                      <th className="text-right">Ingreso Bruto</th>
+                      <th className="text-right">Costo Total</th>
+                      <th className="text-right text-emerald-400">Ingreso Neto</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {summaries.product.map(([key, val]) => {
+                      const serviceInfo = SERVICES.find(s => s.name === key)
+                      const unitPrice = serviceInfo ? serviceInfo.price : 0
+                      const unitCost = serviceInfo ? (serviceInfo.cost || 0) : 0
+                      
+                      const totalCost = unitCost * val.pax
+                      const netIncome = val.total - totalCost
+
+                      return (
+                        <tr key={key}>
+                          <td className="text-white font-bold text-xs">{key}</td>
+                          <td className="text-center">
+                            <span className="badge badge-blue">{val.pax}</span>
+                          </td>
+                          <td className="text-right text-slate-300">{formatCurrency(unitPrice)}</td>
+                          <td className="text-right text-red-300">{formatCurrency(unitCost)}</td>
+                          <td className="text-right text-white font-bold">{formatCurrency(val.total)}</td>
+                          <td className="text-right text-red-400 font-bold">-{formatCurrency(totalCost)}</td>
+                          <td className="text-right text-emerald-400 font-black">{formatCurrency(netIncome)}</td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                  <tfoot>
+                    <tr className="bg-white/5 border-t-2 border-orange-500/30">
+                      <td className="font-black text-white text-xs py-4 uppercase">TOTALES</td>
+                      <td className="text-center font-bold text-white">{summaries.product.reduce((acc, [_, val]) => acc + val.pax, 0)}</td>
+                      <td className="text-right"></td>
+                      <td className="text-right"></td>
+                      <td className="text-right font-black text-white">{formatCurrency(kpis.total_sales)}</td>
+                      <td className="text-right font-black text-red-400">
+                        -{formatCurrency(summaries.product.reduce((acc, [key, val]) => {
+                          const s = SERVICES.find(s => s.name === key)
+                          return acc + ((s?.cost || 0) * val.pax)
+                        }, 0))}
+                      </td>
+                      <td className="text-right font-black text-emerald-400">
+                        {formatCurrency(kpis.total_sales - summaries.product.reduce((acc, [key, val]) => {
+                          const s = SERVICES.find(s => s.name === key)
+                          return acc + ((s?.cost || 0) * val.pax)
+                        }, 0))}
+                      </td>
+                    </tr>
+                  </tfoot>
                 </>
               ) : (
                 <>
