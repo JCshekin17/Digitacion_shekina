@@ -171,7 +171,7 @@ export default function Dashboard() {
 
   // Lógica de resúmenes
   const summaries = useMemo(() => {
-    const byHotel: Record<string, { count: number; total: number; deposit: number; cost: number }> = {}
+    const byHotel: Record<string, { count: number; total: number; deposit: number; cost: number; services: Record<string, number> }> = {}
     const bySeller: Record<string, { count: number; total: number; deposit: number; cost: number }> = {}
     const byMonth: Record<string, { count: number; total: number; deposit: number; cost: number }> = {}
     const byService: Record<string, { count: number; total: number; deposit: number; pax: number }> = {}
@@ -183,7 +183,7 @@ export default function Dashboard() {
       const m = r.date ? r.date.substring(0, 7) : 'Sin Fecha' // YYYY-MM
       const srv = r.service || 'Sin Servicio'
 
-      if (!byHotel[h]) byHotel[h] = { count: 0, total: 0, deposit: 0, cost: 0 }
+      if (!byHotel[h]) byHotel[h] = { count: 0, total: 0, deposit: 0, cost: 0, services: {} }
       if (!bySeller[s]) bySeller[s] = { count: 0, total: 0, deposit: 0, cost: 0 }
       if (!byMonth[m]) byMonth[m] = { count: 0, total: 0, deposit: 0, cost: 0 }
       if (!byService[srv]) byService[srv] = { count: 0, total: 0, deposit: 0, pax: 0 }
@@ -199,6 +199,7 @@ export default function Dashboard() {
       byHotel[h].total += amt
       byHotel[h].deposit += dep
       byHotel[h].cost += cost
+      byHotel[h].services[srv] = (byHotel[h].services[srv] || 0) + pax
 
       bySeller[s].count++
       bySeller[s].total += amt
@@ -480,6 +481,7 @@ export default function Dashboard() {
                   <thead>
                     <tr>
                       <th>{view === 'hotel' ? 'Hotel' : view === 'seller' ? 'Asesor' : view === 'cash' ? 'Hotel (Solo Efectivo)' : 'Mes'}</th>
+                      {view === 'hotel' && <th>Productos Vendidos</th>}
                       <th className="text-center">Cant. Reservas</th>
                       {view !== 'cash' && <th className="text-right">Producción Bruta</th>}
                       <th className="text-right">{view === 'cash' ? 'Efectivo en Caja (Abono)' : 'Recaudado'}</th>
@@ -495,6 +497,15 @@ export default function Dashboard() {
                     {summaries[view as keyof typeof summaries].map(([key, val]) => (
                       <tr key={key}>
                         <td className="text-white font-bold uppercase">{key}</td>
+                        {view === 'hotel' && (
+                          <td className="text-xs text-slate-400">
+                            {Object.entries((val as any).services || {}).map(([s, c]) => (
+                              <div key={s} className="truncate max-w-[200px]" title={s}>
+                                <span className="text-orange-400 font-bold">{c as number}x</span> {s}
+                              </div>
+                            ))}
+                          </td>
+                        )}
                         <td className="text-center">
                           <span className="badge badge-blue">{val.count}</span>
                         </td>
@@ -510,6 +521,7 @@ export default function Dashboard() {
                   <tfoot>
                     <tr className="bg-white/5 border-t-2 border-orange-500/30">
                       <td className="font-black text-white text-xs py-4 uppercase">TOTALES</td>
+                      {view === 'hotel' && <td></td>}
                       <td className="text-center font-bold text-white">
                         {view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').length : filtered.length}
                       </td>
