@@ -17,7 +17,10 @@ const HOTELS = [
 ]
 
 // ── Estado inicial del formulario ────────────────────────────
-type FormState = Omit<SaleRecord, 'id' | 'created_at' | 'balance' | 'payment_proof_url'> & { base_price: number }
+type FormState = Omit<SaleRecord, 'id' | 'created_at' | 'balance' | 'payment_proof_url' | 'service' | 'pax'> & { 
+  base_price: number;
+  services: { service: string; pax: number; base_price: number }[];
+}
 
 const INITIAL_FORM: FormState = {
   date: new Date().toISOString().split('T')[0],
@@ -29,8 +32,7 @@ const INITIAL_FORM: FormState = {
   city: '',
   hotel: '',
   room: '',
-  pax: 1,
-  service: '',
+  services: [{ service: '', pax: 1, base_price: 0 }],
   total_price: 0,
   base_price: 0,
   discount: 0,
@@ -48,7 +50,9 @@ function formatCurrency(value: number) {
   }).format(value)
 }
 
-function buildWhatsAppMessage(data: Omit<SaleRecord, 'id' | 'created_at'> & { balance: number }) {
+function buildWhatsAppMessage(data: FormState & { balance: number }) {
+  const servicesList = data.services.map(s => `• ${s.pax}x ${s.service || 'N/A'}`).join('\n')
+
   const lines = [
     `*Nueva Reserva - Shekina 2.0* 🌴`,
     ``,
@@ -65,9 +69,10 @@ function buildWhatsAppMessage(data: Omit<SaleRecord, 'id' | 'created_at'> & { ba
     `🏨 *DETALLES DE LA RESERVA*`,
     `• Hotel: ${data.hotel || 'N/A'}`,
     `• Habitación: ${data.room || 'N/A'}`,
-    `• Personas: ${data.pax}`,
-    `• Servicio: ${data.service || 'N/A'}`,
     `• Asesor: ${data.seller || 'N/A'}`,
+    ``,
+    `🎒 *SERVICIOS ADQUIRIDOS*`,
+    servicesList,
     ``,
     `💰 *FINANCIERO*`,
     `• Valor del Producto: ${formatCurrency(data.total_price + (data.discount || 0))}`,
@@ -249,13 +254,7 @@ export default function SalesForm() {
       setForm((prev) => {
         const next = { ...prev, [name]: finalValue }
         
-        if (name === 'pax') {
-          const service = SERVICES.find((s) => s.name === prev.service)
-          if (service) {
-            next.base_price = service.price * (next.pax as number)
-            next.total_price = next.base_price - (next.discount || 0)
-          }
-        } else if (name === 'discount') {
+        if (name === 'discount') {
           next.total_price = Math.max(0, (next.base_price || 0) - (finalValue as number))
         } else if (name === 'base_price') {
           next.total_price = Math.max(0, (finalValue as number) - (next.discount || 0))
@@ -273,19 +272,41 @@ export default function SalesForm() {
     setForm((prev) => ({ ...prev, country, city: '' }))
   }, [])
 
-  const handleServiceChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selectedName = e.target.value
-    const service = SERVICES.find((s) => s.name === selectedName)
-    setForm((prev) => {
-      const base = service ? service.price * prev.pax : prev.base_price
+  const handleServiceItemChange = useCallback((index: number, field: 'service' | 'pax', value: string | number) => {
+    setForm(prev => {
+      const newServices = [...prev.services]
+      newServices[index] = { ...newServices[index], [field]: value }
+
+      if (field === 'service') {
+        const srv = SERVICES.find(s => s.name === value)
+        newServices[index].base_price = srv ? srv.price * newServices[index].pax : 0
+      } else if (field === 'pax') {
+        const srv = SERVICES.find(s => s.name === newServices[index].service)
+        newServices[index].base_price = srv ? srv.price * (value as number) : 0
+      }
+
+      const totalBase = newServices.reduce((sum, s) => sum + s.base_price, 0)
       return {
         ...prev,
-        service: selectedName,
-        base_price: base,
-        total_price: Math.max(0, base - (prev.discount || 0)),
+        services: newServices,
+        base_price: totalBase,
+        total_price: Math.max(0, totalBase - (prev.discount || 0))
       }
     })
   }, [])
+
+  const addService = () => setForm(prev => ({ ...prev, services: [...prev.services, { service: '', pax: 1, base_price: 0 }] }))
+  const removeService = (index: number) => setForm(prev => {
+    if (prev.services.length <= 1) return prev
+    const newServices = prev.services.filter((_, i) => i !== index)
+    const totalBase = newServices.reduce((sum, s) => sum + s.base_price, 0)
+    return {
+      ...prev,
+      services: newServices,
+      base_price: totalBase,
+      total_price: Math.max(0, totalBase - (prev.discount || 0))
+    }
+  })
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -294,7 +315,7 @@ export default function SalesForm() {
     setSuccess(false)
     try {
       const finalHotel = form.hotel === 'OTRO' ? customHotel : form.hotel
-      const { base_price, discount, ...restForm } = form
+      const { base_price, discount, services, ...restForm } = form
 
       let payment_proof_url = ''
       
@@ -318,22 +339,44 @@ export default function SalesForm() {
         payment_proof_url = publicUrlData.publicUrl
       }
 
-      const submissionData = { 
-        ...restForm, 
-        discount, 
-        hotel: finalHotel, 
-        balance,
-        ...(payment_proof_url ? { payment_proof_url } : {})
-      }
+      // Distribuir el abono (deposit) y el descuento entre los servicios
+      let remainingDeposit = form.deposit || 0
+      let remainingDiscount = form.discount || 0
+
+      const submissions = services.map((s, index) => {
+        // Asignar descuento (greedy)
+        const currentDiscount = Math.min(s.base_price, remainingDiscount)
+        remainingDiscount -= currentDiscount
+        
+        const currentTotalPrice = s.base_price - currentDiscount
+
+        // Asignar abono (greedy)
+        const currentDeposit = Math.min(currentTotalPrice, remainingDeposit)
+        remainingDeposit -= currentDeposit
+
+        const currentBalance = currentTotalPrice - currentDeposit
+
+        return {
+          ...restForm,
+          hotel: finalHotel,
+          service: s.service,
+          pax: s.pax,
+          total_price: currentTotalPrice,
+          discount: currentDiscount,
+          deposit: currentDeposit,
+          balance: currentBalance,
+          ...(payment_proof_url ? { payment_proof_url } : {})
+        }
+      })
 
       const { error: supabaseError } = await supabase
         .from('sales_records')
-        .insert([submissionData])
+        .insert(submissions)
 
       if (supabaseError) throw new Error(supabaseError.message)
 
-      const message = buildWhatsAppMessage(submissionData)
-      // Usar location.assign es mejor para móviles para evitar bloqueos de popups
+      // Usar form completo para el mensaje (resumen total)
+      const message = buildWhatsAppMessage({ ...form, hotel: finalHotel, balance })
       window.location.assign(`https://wa.me/573222309034?text=${message}`)
 
       setSuccess(true)
@@ -392,7 +435,7 @@ export default function SalesForm() {
             Información General
             <span className="inline-block flex-1 h-px bg-orange-400/20" />
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <div>
               <label className="label-corp" htmlFor="seller">Asesor de Venta *</label>
               <input
@@ -408,36 +451,59 @@ export default function SalesForm() {
                 value={form.date} onChange={handleChange} className="input-corp"
               />
             </div>
-            <div>
-              <label className="label-corp" htmlFor="service">Servicio / Destino</label>
-              <select
-                id="service"
-                name="service"
-                value={form.service}
-                onChange={handleServiceChange}
-                className="input-corp"
-                style={{
-                  appearance: 'none',
-                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-                  backgroundRepeat: 'no-repeat',
-                  backgroundPosition: 'right 12px center',
-                }}
-              >
-                <option value="">— Selecciona un servicio —</option>
-                {SERVICES.map((s) => (
-                  <option key={s.name} value={s.name}>
-                    {s.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="label-corp" htmlFor="pax">Número de Pax *</label>
-              <input
-                id="pax" name="pax" type="number" min="1" max="100" required
-                value={form.pax} onChange={handleChange} className="input-corp"
-              />
-            </div>
+          </div>
+          
+          <div className="space-y-3">
+            {form.services.map((svc, index) => (
+              <div key={index} className="flex gap-4 items-end bg-black/10 p-3 rounded-xl border border-white/5 relative group">
+                <div className="flex-1">
+                  <label className="label-corp text-[10px]">Servicio / Destino {index + 1}</label>
+                  <select
+                    value={svc.service}
+                    onChange={(e) => handleServiceItemChange(index, 'service', e.target.value)}
+                    className="input-corp"
+                    required
+                    style={{
+                      appearance: 'none',
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 12px center',
+                    }}
+                  >
+                    <option value="">— Selecciona un servicio —</option>
+                    {SERVICES.map((s) => (
+                      <option key={s.name} value={s.name}>
+                        {s.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="w-24 sm:w-32">
+                  <label className="label-corp text-[10px]">Pax *</label>
+                  <input
+                    type="number" min="1" max="100" required
+                    value={svc.pax} onChange={(e) => handleServiceItemChange(index, 'pax', parseInt(e.target.value) || 1)} className="input-corp"
+                  />
+                </div>
+                {form.services.length > 1 && (
+                  <button 
+                    type="button" 
+                    onClick={() => removeService(index)}
+                    className="p-3 text-red-400 hover:bg-red-400/20 rounded-lg transition-colors border border-transparent hover:border-red-500/30"
+                    title="Eliminar servicio"
+                  >
+                    🗑️
+                  </button>
+                )}
+              </div>
+            ))}
+            <button 
+              type="button" 
+              onClick={addService}
+              className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors border border-blue-500/20"
+            >
+              <span>+</span> Agregar otro servicio
+            </button>
           </div>
         </div>
 
