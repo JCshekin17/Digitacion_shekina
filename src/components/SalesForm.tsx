@@ -50,7 +50,7 @@ function formatCurrency(value: number) {
   }).format(value)
 }
 
-function buildWhatsAppMessage(data: FormState & { balance: number }) {
+function buildWhatsAppMessage(data: FormState & { balance: number; surcharge: number }) {
   const servicesList = data.services.map(s => `• ${s.pax}x ${s.service || 'N/A'}`).join('\n')
 
   const lines = [
@@ -77,7 +77,8 @@ function buildWhatsAppMessage(data: FormState & { balance: number }) {
     `💰 *FINANCIERO*`,
     `• Valor del Producto: ${formatCurrency(data.total_price + (data.discount || 0))}`,
     data.discount ? `• Descuento: ${formatCurrency(data.discount)}` : null,
-    `• Precio Total: ${formatCurrency(data.total_price)}`,
+    data.surcharge > 0 ? `• Recargo (7% pasarela): ${formatCurrency(data.surcharge)}` : null,
+    `• Precio Total: ${formatCurrency(data.total_price + data.surcharge)}`,
     `• Abono: ${formatCurrency(data.deposit)}`,
     `• Método de Pago: ${data.payment_method || 'N/A'}`,
     `• *Saldo Pendiente: ${formatCurrency(data.balance)}*`,
@@ -221,12 +222,15 @@ export default function SalesForm() {
   const [customHotel, setCustomHotel] = useState('')
   const [proofFile, setProofFile] = useState<File | null>(null)
 
-  // Autocalcular balance
+  // Autocalcular balance y recargo
+  const appliesSurcharge = form.payment_method === 'Datafono' || form.payment_method === 'Link de Pago'
+  const surcharge = appliesSurcharge ? form.total_price * 0.07 : 0
+  const finalTotalPrice = form.total_price + surcharge
+
   useEffect(() => {
-    const total = parseFloat(String(form.total_price)) || 0
     const deposit = parseFloat(String(form.deposit)) || 0
-    setBalance(total - deposit)
-  }, [form.total_price, form.deposit])
+    setBalance(finalTotalPrice - deposit)
+  }, [finalTotalPrice, form.deposit])
 
   // Actualizar ciudades cuando cambia el país
   useEffect(() => {
@@ -348,7 +352,14 @@ export default function SalesForm() {
         const currentDiscount = Math.min(s.base_price, remainingDiscount)
         remainingDiscount -= currentDiscount
         
-        const currentTotalPrice = s.base_price - currentDiscount
+        let currentTotalPrice = s.base_price - currentDiscount
+
+        // Aplicar recargo del 7% si aplica (se guarda sumado en el total_price de la DB)
+        let currentSurcharge = 0
+        if (appliesSurcharge) {
+           currentSurcharge = currentTotalPrice * 0.07
+           currentTotalPrice += currentSurcharge
+        }
 
         // Asignar abono (greedy)
         const currentDeposit = Math.min(currentTotalPrice, remainingDeposit)
@@ -376,7 +387,7 @@ export default function SalesForm() {
       if (supabaseError) throw new Error(supabaseError.message)
 
       // Usar form completo para el mensaje (resumen total)
-      const message = buildWhatsAppMessage({ ...form, hotel: finalHotel, balance })
+      const message = buildWhatsAppMessage({ ...form, hotel: finalHotel, balance, surcharge })
       window.location.assign(`https://wa.me/573222309034?text=${message}`)
 
       setSuccess(true)
@@ -703,7 +714,7 @@ export default function SalesForm() {
             </div>
             
             {/* Método de Pago y Comprobante */}
-            <div>
+            <div className="lg:col-span-2">
               <label className="label-corp" htmlFor="payment_method">Método de Pago</label>
               <select
                 id="payment_method" name="payment_method"
@@ -721,8 +732,16 @@ export default function SalesForm() {
                 <option value="Datafono">Datáfono</option>
                 <option value="Link de Pago">Link de Pago</option>
               </select>
+              {appliesSurcharge && (
+                <div className="mt-2 animate-fade-in flex items-start gap-2 text-xs text-orange-400 bg-orange-500/10 p-2 rounded-lg border border-orange-500/20">
+                  <span>ℹ️</span>
+                  <p>
+                    Se ha anexado un <strong>7% de recargo ({formatCurrency(surcharge)})</strong> al costo del servicio por uso de pasarela de pago.
+                  </p>
+                </div>
+              )}
             </div>
-            <div className="lg:col-span-2">
+            <div>
               <label className="label-corp" htmlFor="payment_proof">Cargar Comprobante (Foto/Imagen)</label>
               <div className="flex items-center gap-3">
                 <input
