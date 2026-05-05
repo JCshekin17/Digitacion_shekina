@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase, type SaleRecord } from '@/lib/supabase'
 import { SERVICES } from '@/lib/services'
+import CalendarView from './CalendarView'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -79,7 +80,7 @@ interface KPIs {
   total_cost: number
 }
 
-type DashboardView = 'list' | 'hotel' | 'seller' | 'month' | 'product' | 'cash'
+type DashboardView = 'list' | 'hotel' | 'seller' | 'month' | 'product' | 'cash' | 'calendar'
 const ITEMS_PER_PAGE = 15
 
 export default function Dashboard() {
@@ -91,6 +92,8 @@ export default function Dashboard() {
   const [currentPage, setCurrentPage] = useState(1)
   const [editingRecord, setEditingRecord] = useState<SaleRecord | null>(null)
   const [savingEdit, setSavingEdit] = useState(false)
+  const [currentMonthDate, setCurrentMonthDate] = useState(new Date())
+  const [selectedDetailsRecord, setSelectedDetailsRecord] = useState<SaleRecord | null>(null)
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -291,6 +294,7 @@ export default function Dashboard() {
           { id: 'hotel', label: 'Por Hotel', icon: '🏨' },
           { id: 'seller', label: 'Por Asesor', icon: '👤' },
           { id: 'month', label: 'Por Mes', icon: '📅' },
+          { id: 'calendar', label: 'Calendario', icon: '🗓️' },
           { id: 'product', label: 'Rentabilidad / Ingreso Neto', icon: '📈' },
           { id: 'cash', label: 'Caja (Efectivo)', icon: '💵' },
         ].map((tab) => (
@@ -315,7 +319,7 @@ export default function Dashboard() {
         <div className="flex flex-col gap-3 p-4 sm:p-5 border-b border-white/5">
           <div className="flex items-center justify-between">
             <h2 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
-              {view === 'list' ? 'Registros Detallados' : view === 'product' ? 'Tabla de Precios e Ingreso Neto' : view === 'cash' ? 'Efectivo en Caja por Hotel' : `Resumen ${view === 'hotel' ? 'por Hotel' : view === 'seller' ? 'por Asesor' : 'por Mes'}`}
+              {view === 'list' ? 'Registros Detallados' : view === 'product' ? 'Tabla de Precios e Ingreso Neto' : view === 'cash' ? 'Efectivo en Caja por Hotel' : view === 'calendar' ? 'Calendario de Reservas' : `Resumen ${view === 'hotel' ? 'por Hotel' : view === 'seller' ? 'por Asesor' : 'por Mes'}`}
             </h2>
             <button onClick={fetchData} className="btn-secondary p-2 text-xs">🔄</button>
           </div>
@@ -333,7 +337,14 @@ export default function Dashboard() {
 
         {/* Content */}
         <div className="table-wrapper">
-          {loading ? (
+          {view === 'calendar' ? (
+            <CalendarView 
+              records={filtered} 
+              currentDate={currentMonthDate} 
+              onDateChange={setCurrentMonthDate} 
+              onRecordClick={setSelectedDetailsRecord} 
+            />
+          ) : loading ? (
             <div className="py-20 text-center text-slate-500 text-sm">Cargando datos...</div>
           ) : filtered.length === 0 ? (
             <div className="py-20 text-center text-slate-500 text-sm">No hay datos disponibles</div>
@@ -622,6 +633,64 @@ export default function Dashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Detalles Reserva (Calendario) */}
+      {selectedDetailsRecord && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in" onClick={() => setSelectedDetailsRecord(null)}>
+          <div className="bg-[#0d1f38] border border-blue-500/30 rounded-2xl p-6 w-full max-w-sm shadow-2xl relative" onClick={e => e.stopPropagation()}>
+            <button 
+              onClick={() => setSelectedDetailsRecord(null)}
+              className="absolute top-4 right-4 text-slate-400 hover:text-white"
+            >
+              ✕
+            </button>
+            <h3 className="text-lg font-black text-white mb-4 border-b border-white/10 pb-3 flex items-center gap-2">
+              <span>📋</span> Detalle de Reserva
+            </h3>
+            <div className="space-y-4">
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Cliente</p>
+                <p className="text-white font-medium">{selectedDetailsRecord.customer_name}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Servicio</p>
+                  <p className="text-orange-400 font-bold">{selectedDetailsRecord.service}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">PAX</p>
+                  <p className="text-white font-medium">{selectedDetailsRecord.pax}</p>
+                </div>
+              </div>
+              <div>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Hotel de Recogida</p>
+                <p className="text-slate-300">{selectedDetailsRecord.hotel || 'No especificado'}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Fecha Reserva</p>
+                  <p className="text-slate-300">{selectedDetailsRecord.date}</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Asesor</p>
+                  <p className="text-slate-300">{selectedDetailsRecord.seller || 'N/A'}</p>
+                </div>
+              </div>
+            </div>
+            <div className="mt-6 pt-4 border-t border-white/10 flex justify-end">
+              <button 
+                onClick={() => {
+                  setEditingRecord(selectedDetailsRecord)
+                  setSelectedDetailsRecord(null)
+                }} 
+                className="btn-secondary text-xs px-4 py-2"
+              >
+                ✏️ Editar Completo
+              </button>
+            </div>
           </div>
         </div>
       )}
