@@ -251,7 +251,7 @@ export default function Dashboard() {
           />
           <div className="h-8 w-px bg-[#088DCF]/30" />
           <div>
-            <h1 className="text-base sm:text-lg font-black text-white tracking-tight leading-tight">
+            <h1 className="text-base sm:text-lg font-black text-[#110E3C] tracking-tight leading-tight">
               Panel de <span style={{color:'#088DCF'}}>Control</span>
             </h1>
             <p className="text-[10px] sm:text-xs text-slate-400">Resúmenes Estadísticos 2.0</p>
