@@ -28,11 +28,12 @@ export default function CajaPage() {
   const [success, setSuccess] = useState(false)
   const [showSqlHelp, setShowSqlHelp] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
+  const [noConsignment, setNoConsignment] = useState(false)
 
   // Calcule balance live
   const fAmt = Number(foundAmount) || 0
   const cAmt = Number(consignedAmount) || 0
-  const balance = fAmt - cAmt
+  const balance = noConsignment ? 0 : (fAmt - cAmt)
 
   const sqlQuery = `-- EJECUTA ESTO EN TU SQL EDITOR DE SUPABASE PARA EL REGISTRO DE CAJA:
 CREATE TABLE IF NOT EXISTS public.cash_records (
@@ -101,11 +102,14 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
     setError(null)
     setSuccess(false)
 
+    const finalAdvisor = noConsignment ? `${advisor} (SIN CONSIGNACIÓN)` : advisor
+    const finalConsignedAmount = noConsignment ? fAmt : cAmt
+
     const newRecord: CashRecord = {
       date,
-      advisor,
+      advisor: finalAdvisor,
       found_amount: fAmt,
-      consigned_amount: cAmt,
+      consigned_amount: finalConsignedAmount,
       balance,
     }
 
@@ -115,9 +119,9 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
         .from('cash_records')
         .insert([{
           date,
-          advisor,
+          advisor: finalAdvisor,
           found_amount: fAmt,
-          consigned_amount: cAmt
+          consigned_amount: finalConsignedAmount
         }])
 
       if (sbError) {
@@ -133,6 +137,7 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
         setAdvisor('')
         setFoundAmount('')
         setConsignedAmount('')
+        setNoConsignment(false)
         fetchRecords()
       }
     } catch (err: any) {
@@ -340,8 +345,29 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
               </div>
             </div>
 
+            {/* Checkbox No Consignación */}
+            <div className="flex items-center gap-2 py-1.5 px-1">
+              <input
+                id="noConsignment"
+                type="checkbox"
+                checked={noConsignment}
+                onChange={(e) => {
+                  setNoConsignment(e.target.checked)
+                  if (e.target.checked) {
+                    setConsignedAmount(0)
+                  } else {
+                    setConsignedAmount('')
+                  }
+                }}
+                className="w-4 h-4 rounded text-[#088DCF] focus:ring-[#088DCF]/20 border-slate-300"
+              />
+              <label htmlFor="noConsignment" className="text-xs font-bold text-slate-600 cursor-pointer select-none">
+                No se realiza consignación hoy (Saldo $0)
+              </label>
+            </div>
+
             {/* Cantidad Consignada */}
-            <div>
+            <div className={noConsignment ? 'opacity-50' : ''}>
               <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5" htmlFor="cConsigned">
                 <DollarSign className="w-3.5 h-3.5 text-slate-400" /> Cantidad Consignada (Banco) *
               </label>
@@ -353,8 +379,9 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
                   min="0"
                   step="1000"
                   required
+                  disabled={noConsignment}
                   placeholder="0"
-                  value={consignedAmount}
+                  value={noConsignment ? 0 : consignedAmount}
                   onChange={(e) => setConsignedAmount(e.target.value === '' ? '' : Number(e.target.value))}
                   className="w-full rounded-xl border border-slate-200 pl-8 pr-4 py-2.5 text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#088DCF]/20 focus:border-[#088DCF] font-semibold transition-all"
                 />
@@ -429,13 +456,31 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-xs">
                   {records.map((r, i) => {
-                    const diff = r.found_amount - r.consigned_amount
+                    const isNoCons = r.advisor.includes('SIN CONSIGNACIÓN')
+                    const cleanAdvisor = r.advisor.replace(' (SIN CONSIGNACIÓN)', '')
+                    const displayConsigned = isNoCons ? 0 : r.consigned_amount
+                    const diff = isNoCons ? 0 : (r.found_amount - r.consigned_amount)
                     return (
                       <tr key={r.id || i} className="hover:bg-slate-50/50 transition-colors">
                         <td className="py-3.5 pl-1 text-slate-500 font-semibold">{r.date}</td>
-                        <td className="py-3.5 text-[#110E3C] font-extrabold uppercase">{r.advisor}</td>
+                        <td className="py-3.5 text-[#110E3C] font-extrabold uppercase">
+                          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5">
+                            <span>{cleanAdvisor}</span>
+                            {isNoCons && (
+                              <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
+                                Sin Consignación
+                              </span>
+                            )}
+                          </div>
+                        </td>
                         <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.found_amount)}</td>
-                        <td className="py-3.5 text-right font-bold text-slate-600">-{formatCurrency(r.consigned_amount)}</td>
+                        <td className="py-3.5 text-right font-bold text-slate-600">
+                          {isNoCons ? (
+                            <span className="text-slate-400 font-semibold italic">No consigna</span>
+                          ) : (
+                            `-${formatCurrency(displayConsigned)}`
+                          )}
+                        </td>
                         <td className="py-3.5 text-right">
                           <span className={`font-black ${diff >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                             {formatCurrency(diff)}
