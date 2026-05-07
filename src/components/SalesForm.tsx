@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, type SaleRecord } from '@/lib/supabase'
 import { COUNTRIES, getCitiesByCountry } from '@/lib/countries'
 import { SERVICES } from '@/lib/services'
+import { PenSquare, CheckCircle2, XCircle, Trash2, Info, AlertTriangle, Plus } from 'lucide-react'
 
 // ── Hoteles disponibles ──────────────────────────────────────
 const HOTELS = [
@@ -410,7 +411,7 @@ export default function SalesForm() {
       {/* Header */}
       <div className="mb-5 sm:mb-8">
         <div className="flex items-center gap-2 sm:gap-3 mb-1">
-          <span className="text-xl sm:text-2xl">✏️</span>
+          <PenSquare className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
           <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             Reservas Shekina <span className="text-orange-400">2.0</span>
           </h1>
@@ -422,7 +423,7 @@ export default function SalesForm() {
       {/* Alertas */}
       {success && (
         <div className="mb-6 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-start gap-3 animate-fade-in">
-          <span className="text-xl">✅</span>
+          <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
           <div>
             <p className="text-emerald-400 font-bold text-sm">¡Reserva registrada exitosamente!</p>
             <p className="text-emerald-300/70 text-xs mt-1">El resumen fue enviado por WhatsApp.</p>
@@ -431,7 +432,7 @@ export default function SalesForm() {
       )}
       {error && (
         <div className="mb-6 p-4 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start gap-3 animate-fade-in">
-          <span className="text-xl">❌</span>
+          <XCircle className="w-6 h-6 text-red-400 shrink-0" />
           <div>
             <p className="text-red-400 font-bold text-sm">Error al guardar</p>
             <p className="text-red-300/70 text-xs mt-1">{error}</p>
@@ -505,7 +506,7 @@ export default function SalesForm() {
                     className="p-3 text-red-400 hover:bg-red-400/20 rounded-lg transition-colors border border-transparent hover:border-red-500/30"
                     title="Eliminar servicio"
                   >
-                    🗑️
+                    <Trash2 className="w-4 h-4" />
                   </button>
                 )}
               </div>
@@ -515,7 +516,7 @@ export default function SalesForm() {
               onClick={addService}
               className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors border border-blue-500/20"
             >
-              <span>+</span> Agregar otro servicio
+              <Plus className="w-4 h-4" /> Agregar otro servicio
             </button>
           </div>
         </div>
@@ -736,7 +737,7 @@ export default function SalesForm() {
               </select>
               {appliesSurcharge && (
                 <div className="mt-2 animate-fade-in flex items-start gap-2 text-xs text-orange-400 bg-orange-500/10 p-2 rounded-lg border border-orange-500/20">
-                  <span>ℹ️</span>
+                  <Info className="w-4 h-4 shrink-0 mt-0.5" />
                   <p>
                     Se ha anexado un <strong>7% de recargo ({formatCurrency(surcharge)})</strong> al costo del servicio por uso de pasarela de pago.
                   </p>
@@ -770,7 +771,7 @@ export default function SalesForm() {
 
           {balance > 0 && (
             <div className="mt-4 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center gap-2">
-              <span className="text-orange-400 text-sm">⚠️</span>
+              <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0" />
               <p className="text-orange-300 text-sm">
                 Saldo pendiente de <span className="font-bold">{formatCurrency(balance)}</span> por cobrar al cliente.
               </p>
@@ -778,7 +779,7 @@ export default function SalesForm() {
           )}
           {balance === 0 && form.total_price > 0 && (
             <div className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
-              <span className="text-emerald-400 text-sm">✅</span>
+              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
               <p className="text-emerald-300 text-sm font-semibold">Reserva pagada en su totalidad.</p>
             </div>
           )}

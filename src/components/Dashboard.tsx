@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase, type SaleRecord } from '@/lib/supabase'
 import { SERVICES } from '@/lib/services'
 import CalendarView from './CalendarView'
+import { BarChart3, CircleDollarSign, CheckCircle2, Clock, ClipboardList, Hotel, User, Calendar, CalendarDays, TrendingUp, Banknote } from 'lucide-react'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -239,7 +240,7 @@ export default function Dashboard() {
       {/* Header */}
       <div className="mb-5 sm:mb-8">
         <div className="flex items-center gap-2 sm:gap-3 mb-1">
-          <span className="text-xl sm:text-2xl">📊</span>
+          <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-orange-400" />
           <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
             Reservas Shekina <span className="text-orange-400">2.0</span>
           </h1>
@@ -253,7 +254,7 @@ export default function Dashboard() {
         <div className="kpi-card">
           <div className="flex items-start justify-between mb-2">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ventas Totales</p>
-            <span className="text-xl">💰</span>
+            <CircleDollarSign className="w-5 h-5 text-slate-400" />
           </div>
           <p className="text-2xl font-black text-white">{formatCurrency(kpis.total_sales)}</p>
           <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
@@ -263,7 +264,7 @@ export default function Dashboard() {
         <div className="kpi-card">
           <div className="flex items-start justify-between mb-2">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recaudado</p>
-            <span className="text-xl">✅</span>
+            <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           </div>
           <p className="text-2xl font-black text-emerald-400">{formatCurrency(kpis.total_deposits)}</p>
           <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
@@ -276,7 +277,7 @@ export default function Dashboard() {
         <div className="kpi-card">
           <div className="flex items-start justify-between mb-2">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Por Cobrar</p>
-            <span className="text-xl">⏳</span>
+            <Clock className="w-5 h-5 text-orange-400" />
           </div>
           <p className="text-2xl font-black text-orange-400">{formatCurrency(kpis.total_balance)}</p>
           <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
@@ -291,13 +292,13 @@ export default function Dashboard() {
       {/* Tabs */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
         {[
-          { id: 'list', label: 'Lista Completa', icon: '📋' },
-          { id: 'hotel', label: 'Por Hotel', icon: '🏨' },
-          { id: 'seller', label: 'Por Asesor', icon: '👤' },
-          { id: 'month', label: 'Por Mes', icon: '📅' },
-          { id: 'calendar', label: 'Calendario', icon: '🗓️' },
-          { id: 'product', label: 'Rentabilidad / Ingreso Neto', icon: '📈' },
-          { id: 'cash', label: 'Caja (Efectivo)', icon: '💵' },
+          { id: 'list', label: 'Lista Completa', icon: <ClipboardList className="w-4 h-4" /> },
+          { id: 'hotel', label: 'Por Hotel', icon: <Hotel className="w-4 h-4" /> },
+          { id: 'seller', label: 'Por Asesor', icon: <User className="w-4 h-4" /> },
+          { id: 'month', label: 'Por Mes', icon: <Calendar className="w-4 h-4" /> },
+          { id: 'calendar', label: 'Calendario', icon: <CalendarDays className="w-4 h-4" /> },
+          { id: 'product', label: 'Rentabilidad / Ingreso Neto', icon: <TrendingUp className="w-4 h-4" /> },
+          { id: 'cash', label: 'Caja (Efectivo)', icon: <Banknote className="w-4 h-4" /> },
         ].map((tab) => (
           <button
             key={tab.id}
