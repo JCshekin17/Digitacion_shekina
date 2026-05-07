@@ -5,6 +5,7 @@ import { supabase, type SaleRecord } from '@/lib/supabase'
 import { SERVICES } from '@/lib/services'
 import CalendarView from './CalendarView'
 import { BarChart3, CircleDollarSign, CheckCircle2, Clock, ClipboardList, Hotel, User, Calendar, CalendarDays, TrendingUp, Banknote } from 'lucide-react'
+import Image from 'next/image'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -239,14 +240,24 @@ export default function Dashboard() {
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 animate-fade-in">
       {/* Header */}
       <div className="mb-5 sm:mb-8">
-        <div className="flex items-center gap-2 sm:gap-3 mb-1">
-          <BarChart3 className="w-6 h-6 sm:w-8 sm:h-8 text-orange-400" />
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            Reservas Shekina <span className="text-orange-400">2.0</span>
-          </h1>
+        <div className="flex items-center gap-3 sm:gap-4 mb-2">
+          <Image
+            src="/shekina-logo.png"
+            alt="Shekina Tours y Logística"
+            width={140}
+            height={52}
+            priority
+            className="object-contain h-10 sm:h-12 w-auto"
+          />
+          <div className="h-8 w-px bg-[#088DCF]/30" />
+          <div>
+            <h1 className="text-base sm:text-lg font-black text-white tracking-tight leading-tight">
+              Panel de <span style={{color:'#088DCF'}}>Control</span>
+            </h1>
+            <p className="text-[10px] sm:text-xs text-slate-400">Resúmenes Estadísticos 2.0</p>
+          </div>
         </div>
-        <p className="text-slate-400 text-xs sm:text-sm ml-8 sm:ml-11">Panel de Control y Resúmenes Estadísticos</p>
-        <div className="mt-3 sm:mt-4 h-px bg-gradient-to-r from-orange-500/50 via-blue-500/30 to-transparent" />
+        <div className="h-px" style={{background:'linear-gradient(90deg, #088DCF55, #110E3C00)'}} />
       </div>
 
       {/* KPI Cards */}

@@ -5,6 +5,7 @@ import { supabase, type SaleRecord } from '@/lib/supabase'
 import { COUNTRIES, getCitiesByCountry } from '@/lib/countries'
 import { SERVICES } from '@/lib/services'
 import { PenSquare, CheckCircle2, XCircle, Trash2, Info, AlertTriangle, Plus } from 'lucide-react'
+import Image from 'next/image'
 
 // ── Hoteles disponibles ──────────────────────────────────────
 const HOTELS = [
@@ -410,14 +411,24 @@ export default function SalesForm() {
     <div className="max-w-5xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 animate-fade-in">
       {/* Header */}
       <div className="mb-5 sm:mb-8">
-        <div className="flex items-center gap-2 sm:gap-3 mb-1">
-          <PenSquare className="w-5 h-5 sm:w-6 sm:h-6 text-orange-400" />
-          <h1 className="text-xl sm:text-2xl font-black text-white tracking-tight">
-            Reservas Shekina <span className="text-orange-400">2.0</span>
-          </h1>
+        <div className="flex items-center gap-3 sm:gap-4 mb-2">
+          <Image
+            src="/shekina-logo.png"
+            alt="Shekina Tours y Logística"
+            width={140}
+            height={52}
+            priority
+            className="object-contain h-10 sm:h-12 w-auto"
+          />
+          <div className="h-8 w-px bg-[#088DCF]/30" />
+          <div>
+            <h1 className="text-base sm:text-lg font-black text-white tracking-tight leading-tight">
+              Ingreso de <span style={{color:'#088DCF'}}>Ventas</span>
+            </h1>
+            <p className="text-[10px] sm:text-xs text-slate-400">Motor de Reservas 2.0</p>
+          </div>
         </div>
-        <p className="text-slate-400 text-xs sm:text-sm ml-8 sm:ml-11">Ingreso de Ventas — Shekina Tours y Logística</p>
-        <div className="mt-3 sm:mt-4 h-px bg-gradient-to-r from-orange-500/50 via-blue-500/30 to-transparent" />
+        <div className="h-px" style={{background:'linear-gradient(90deg, #088DCF55, #110E3C00)'}} />
       </div>
 
       {/* Alertas */}
