@@ -455,10 +455,10 @@ export default function SalesForm() {
 
         {/* ── Información General ── */}
         <div className="glass-card p-4 sm:p-6">
-          <h2 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-5 flex items-center gap-2">
-            <span className="inline-block w-5 h-px bg-orange-400" />
+          <h2 className="text-xs font-bold text-[#088DCF] uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span className="inline-block w-5 h-px bg-[#088DCF]" />
             Información General
-            <span className="inline-block flex-1 h-px bg-orange-400/20" />
+            <span className="inline-block flex-1 h-px bg-[#088DCF]/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <div>
@@ -480,7 +480,7 @@ export default function SalesForm() {
           
           <div className="space-y-3">
             {form.services.map((svc, index) => (
-              <div key={index} className="flex gap-4 items-end bg-black/10 p-3 rounded-xl border border-white/5 relative group">
+              <div key={index} className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-end bg-[#088DCF]/05 p-3 rounded-xl border border-[#088DCF]/15 relative group">
                 <div className="flex-1">
                   <label className="label-corp text-[10px]">Servicio / Destino {index + 1}</label>
                   <select
@@ -503,7 +503,7 @@ export default function SalesForm() {
                     ))}
                   </select>
                 </div>
-                <div className="w-24 sm:w-32">
+                <div className="w-full sm:w-28">
                   <label className="label-corp text-[10px]">Pax *</label>
                   <input
                     type="number" min="1" max="100" required
@@ -534,10 +534,10 @@ export default function SalesForm() {
 
         {/* ── Datos del Cliente ── */}
         <div className="glass-card p-4 sm:p-6">
-          <h2 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-5 flex items-center gap-2">
-            <span className="inline-block w-5 h-px bg-orange-400" />
+          <h2 className="text-xs font-bold text-[#088DCF] uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span className="inline-block w-5 h-px bg-[#088DCF]" />
             Datos del Cliente
-            <span className="inline-block flex-1 h-px bg-orange-400/20" />
+            <span className="inline-block flex-1 h-px bg-[#088DCF]/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="sm:col-span-2 lg:col-span-1">
@@ -620,10 +620,10 @@ export default function SalesForm() {
 
         {/* ── Alojamiento ── */}
         <div className="glass-card p-4 sm:p-6">
-          <h2 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-5 flex items-center gap-2">
-            <span className="inline-block w-5 h-px bg-orange-400" />
+          <h2 className="text-xs font-bold text-[#088DCF] uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span className="inline-block w-5 h-px bg-[#088DCF]" />
             Alojamiento
-            <span className="inline-block flex-1 h-px bg-orange-400/20" />
+            <span className="inline-block flex-1 h-px bg-[#088DCF]/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
 
@@ -678,10 +678,10 @@ export default function SalesForm() {
 
         {/* ── Financiero ── */}
         <div className="glass-card p-4 sm:p-6">
-          <h2 className="text-xs font-bold text-orange-400 uppercase tracking-widest mb-5 flex items-center gap-2">
-            <span className="inline-block w-5 h-px bg-orange-400" />
+          <h2 className="text-xs font-bold text-[#088DCF] uppercase tracking-widest mb-5 flex items-center gap-2">
+            <span className="inline-block w-5 h-px bg-[#088DCF]" />
             Información Financiera
-            <span className="inline-block flex-1 h-px bg-orange-400/20" />
+            <span className="inline-block flex-1 h-px bg-[#088DCF]/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
@@ -719,7 +719,7 @@ export default function SalesForm() {
             <div>
               <label className="label-corp" htmlFor="balance_display">
                 Saldo Pendiente{' '}
-                <span className="text-orange-400/60 normal-case font-normal">(autocalculado)</span>
+                <span className="text-[#088DCF]/60 normal-case font-normal">(autocalculado)</span>
               </label>
               <input
                 id="balance_display" name="balance_display" type="text"
@@ -747,7 +747,7 @@ export default function SalesForm() {
                 <option value="Link de Pago">Link de Pago</option>
               </select>
               {appliesSurcharge && (
-                <div className="mt-2 animate-fade-in flex items-start gap-2 text-xs text-orange-400 bg-orange-500/10 p-2 rounded-lg border border-orange-500/20">
+                <div className="mt-2 animate-fade-in flex items-start gap-2 text-xs text-[#088DCF] bg-[#088DCF]/08 p-2 rounded-lg border border-[#088DCF]/20">
                   <Info className="w-4 h-4 shrink-0 mt-0.5" />
                   <p>
                     Se ha anexado un <strong>7% de recargo ({formatCurrency(surcharge)})</strong> al costo del servicio por uso de pasarela de pago.
@@ -781,17 +781,17 @@ export default function SalesForm() {
           </div>
 
           {balance > 0 && (
-            <div className="mt-4 p-3 rounded-lg bg-orange-500/10 border border-orange-500/20 flex items-center gap-2">
-              <AlertTriangle className="w-4 h-4 text-orange-400 shrink-0" />
-              <p className="text-orange-300 text-sm">
+            <div className="mt-4 p-3 rounded-lg bg-amber-50 border border-amber-300/50 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0" />
+              <p className="text-amber-700 text-sm">
                 Saldo pendiente de <span className="font-bold">{formatCurrency(balance)}</span> por cobrar al cliente.
               </p>
             </div>
           )}
           {balance === 0 && form.total_price > 0 && (
-            <div className="mt-4 p-3 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-              <p className="text-emerald-300 text-sm font-semibold">Reserva pagada en su totalidad.</p>
+            <div className="mt-4 p-3 rounded-lg bg-emerald-50 border border-emerald-300/50 flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              <p className="text-emerald-700 text-sm font-semibold">Reserva pagada en su totalidad.</p>
             </div>
           )}
         </div>
@@ -815,9 +815,9 @@ export default function SalesForm() {
                 setSuccess(false)
               }}
               disabled={loading}
-              className="px-4 py-3 sm:py-2 bg-slate-800/50 hover:bg-slate-800 text-slate-300 rounded-xl border border-white/5 font-bold text-sm transition-all"
+              className="px-4 py-3 sm:py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl border border-slate-200 font-bold text-sm transition-all"
             >
-              🧹 Limpiar
+              Limpiar
             </button>
             <button
               type="submit" disabled={loading}

@@ -267,9 +267,9 @@ export default function Dashboard() {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ventas Totales</p>
             <CircleDollarSign className="w-5 h-5 text-slate-400" />
           </div>
-          <p className="text-2xl font-black text-white">{formatCurrency(kpis.total_sales)}</p>
-          <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
-            <div className="h-full bg-orange-500 w-full" />
+          <p className="text-2xl font-black text-[#110E3C]">{formatCurrency(kpis.total_sales)}</p>
+          <div className="mt-3 h-1 rounded-full bg-slate-100 overflow-hidden">
+            <div className="h-full bg-[#088DCF] w-full" />
           </div>
         </div>
         <div className="kpi-card">
@@ -278,10 +278,10 @@ export default function Dashboard() {
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           </div>
           <p className="text-2xl font-black text-emerald-400">{formatCurrency(kpis.total_deposits)}</p>
-          <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
-            <div 
-              className="h-full bg-emerald-500" 
-              style={{ width: kpis.total_sales > 0 ? `${(kpis.total_deposits/kpis.total_sales)*100}%` : '0%' }} 
+          <div className="mt-3 h-1 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className="h-full bg-emerald-500"
+              style={{ width: kpis.total_sales > 0 ? `${(kpis.total_deposits/kpis.total_sales)*100}%` : '0%' }}
             />
           </div>
         </div>
@@ -290,11 +290,11 @@ export default function Dashboard() {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Por Cobrar</p>
             <Clock className="w-5 h-5 text-orange-400" />
           </div>
-          <p className="text-2xl font-black text-orange-400">{formatCurrency(kpis.total_balance)}</p>
-          <div className="mt-3 h-1 rounded-full bg-white/5 overflow-hidden">
-            <div 
-              className="h-full bg-orange-600" 
-              style={{ width: kpis.total_sales > 0 ? `${(kpis.total_balance/kpis.total_sales)*100}%` : '0%' }} 
+          <p className="text-2xl font-black text-[#088DCF]">{formatCurrency(kpis.total_balance)}</p>
+          <div className="mt-3 h-1 rounded-full bg-slate-100 overflow-hidden">
+            <div
+              className="h-full bg-[#088DCF]/60"
+              style={{ width: kpis.total_sales > 0 ? `${(kpis.total_balance/kpis.total_sales)*100}%` : '0%' }}
             />
           </div>
         </div>
@@ -314,10 +314,10 @@ export default function Dashboard() {
           <button
             key={tab.id}
             onClick={() => setView(tab.id as DashboardView)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border ${
+            className={`flex items-center gap-2 px-3 sm:px-4 py-2.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap border ${
               view === tab.id
-                ? 'bg-orange-500 border-orange-400 text-white shadow-lg shadow-orange-500/20'
-                : 'bg-navy-800/50 border-white/5 text-slate-400 hover:bg-white/5'
+                ? 'bg-[#088DCF] border-[#088DCF] text-white shadow-md shadow-[#088DCF]/20'
+                : 'bg-white border-slate-200 text-[#110E3C] hover:bg-[#088DCF]/08 hover:border-[#088DCF]/30'
             }`}
           >
             <span>{tab.icon}</span>
@@ -329,9 +329,9 @@ export default function Dashboard() {
       {/* Main Container */}
       <div className="glass-card overflow-hidden">
         {/* Toolbar */}
-        <div className="flex flex-col gap-3 p-4 sm:p-5 border-b border-white/5">
+        <div className="flex flex-col gap-3 p-4 sm:p-5 border-b border-slate-100">
           <div className="flex items-center justify-between">
-            <h2 className="text-xs sm:text-sm font-bold text-white uppercase tracking-wide">
+            <h2 className="text-xs sm:text-sm font-bold text-[#110E3C] uppercase tracking-wide">
               {view === 'list' ? 'Registros Detallados' : view === 'product' ? 'Tabla de Precios e Ingreso Neto' : view === 'cash' ? 'Efectivo en Caja por Hotel' : view === 'calendar' ? 'Calendario de Reservas' : `Resumen ${view === 'hotel' ? 'por Hotel' : view === 'seller' ? 'por Asesor' : 'por Mes'}`}
             </h2>
             <button onClick={fetchData} className="btn-secondary p-2 text-xs">🔄</button>
