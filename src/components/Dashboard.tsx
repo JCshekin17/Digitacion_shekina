@@ -496,39 +496,50 @@ export default function Dashboard() {
                       {view === 'hotel' && <th>Productos Vendidos</th>}
                       <th className="text-center">Cant. Reservas</th>
                       {view !== 'cash' && <th className="text-right">Producción Bruta</th>}
+                      {view !== 'cash' && <th className="text-right text-red-400">Costo Total</th>}
                       <th className="text-right">{view === 'cash' ? 'Efectivo en Caja (Abono)' : 'Recaudado'}</th>
                       {view !== 'cash' && <th className="text-right">Por Cobrar</th>}
-                      {(view === 'hotel' || view === 'seller') && (
-                        <th className="text-right text-orange-400">
-                          {view === 'seller' ? 'Ingreso Asesor' : 'Comisión'}
-                        </th>
+                      {(view === 'hotel' || view === 'month') && (
+                        <th className="text-right text-orange-400">Comisión Hotel (30%)</th>
+                      )}
+                      {(view === 'seller' || view === 'month') && (
+                        <th className="text-right text-yellow-400">Comisión Asesor (15%)</th>
                       )}
                     </tr>
                   </thead>
                   <tbody>
-                    {summaries[view as keyof typeof summaries].map(([key, val]) => (
-                      <tr key={key}>
-                        <td className="text-white font-bold uppercase">{key}</td>
-                        {view === 'hotel' && (
-                          <td className="text-xs text-slate-400">
-                            {Object.entries((val as any).services || {}).map(([s, c]) => (
-                              <div key={s} className="truncate max-w-[200px]" title={s}>
-                                <span className="text-orange-400 font-bold">{c as number}x</span> {s}
-                              </div>
-                            ))}
+                    {summaries[view as keyof typeof summaries].map(([key, val]) => {
+                      const margen = val.total - (val as any).cost
+                      const comHotel = margen * 0.30
+                      const comAsesor = margen * 0.15
+                      return (
+                        <tr key={key}>
+                          <td className="text-white font-bold uppercase">{key}</td>
+                          {view === 'hotel' && (
+                            <td className="text-xs text-slate-400">
+                              {Object.entries((val as any).services || {}).map(([s, c]) => (
+                                <div key={s} className="truncate max-w-[200px]" title={s}>
+                                  <span className="text-orange-400 font-bold">{c as number}x</span> {s}
+                                </div>
+                              ))}
+                            </td>
+                          )}
+                          <td className="text-center">
+                            <span className="badge badge-blue">{val.count}</span>
                           </td>
-                        )}
-                        <td className="text-center">
-                          <span className="badge badge-blue">{val.count}</span>
-                        </td>
-                        {view !== 'cash' && <td className="text-right text-white font-black">{formatCurrency(val.total)}</td>}
-                        <td className="text-right text-emerald-400 font-bold">{formatCurrency(val.deposit)}</td>
-                        {view !== 'cash' && <td className="text-right text-orange-400 font-bold">{formatCurrency(val.total - val.deposit)}</td>}
-                        {(view === 'hotel' || view === 'seller') && (
-                          <td className="text-right text-orange-400 font-black">{formatCurrency((val.total - (val as any).cost) * (view === 'hotel' ? 0.30 : 0.15))}</td>
-                        )}
-                      </tr>
-                    ))}
+                          {view !== 'cash' && <td className="text-right text-white font-black">{formatCurrency(val.total)}</td>}
+                          {view !== 'cash' && <td className="text-right text-red-400 font-bold">-{formatCurrency((val as any).cost)}</td>}
+                          <td className="text-right text-emerald-400 font-bold">{formatCurrency(val.deposit)}</td>
+                          {view !== 'cash' && <td className="text-right text-orange-400 font-bold">{formatCurrency(val.total - val.deposit)}</td>}
+                          {(view === 'hotel' || view === 'month') && (
+                            <td className="text-right text-orange-400 font-black">{formatCurrency(comHotel)}</td>
+                          )}
+                          {(view === 'seller' || view === 'month') && (
+                            <td className="text-right text-yellow-400 font-black">{formatCurrency(comAsesor)}</td>
+                          )}
+                        </tr>
+                      )
+                    })}
                   </tbody>
                   <tfoot>
                     <tr className="bg-white/5 border-t-2 border-orange-500/30">
@@ -542,6 +553,11 @@ export default function Dashboard() {
                           {formatCurrency(kpis.total_sales)}
                         </td>
                       )}
+                      {view !== 'cash' && (
+                        <td className="text-right font-black text-red-400">
+                          -{formatCurrency(kpis.total_cost)}
+                        </td>
+                      )}
                       <td className="text-right font-black text-emerald-400">
                         {formatCurrency(view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').reduce((sum, r) => sum + (r.deposit || 0), 0) : kpis.total_deposits)}
                       </td>
@@ -550,8 +566,15 @@ export default function Dashboard() {
                           {formatCurrency(kpis.total_balance)}
                         </td>
                       )}
-                      {(view === 'hotel' || view === 'seller') && (
-                        <td className="text-right font-black text-orange-400">{formatCurrency((kpis.total_sales - kpis.total_cost) * (view === 'hotel' ? 0.30 : 0.15))}</td>
+                      {(view === 'hotel' || view === 'month') && (
+                        <td className="text-right font-black text-orange-400">
+                          {formatCurrency((kpis.total_sales - kpis.total_cost) * 0.30)}
+                        </td>
+                      )}
+                      {(view === 'seller' || view === 'month') && (
+                        <td className="text-right font-black text-yellow-400">
+                          {formatCurrency((kpis.total_sales - kpis.total_cost) * 0.15)}
+                        </td>
                       )}
                     </tr>
                   </tfoot>
