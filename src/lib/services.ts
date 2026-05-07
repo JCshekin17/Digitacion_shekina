@@ -15,7 +15,6 @@ export function normalizeServiceName(s: string): string {
 }
 
 export const SERVICES: ServiceItem[] = [
-  { name: 'FULL ADVENTURE', price: 270000, cost: 210000 }, // ⚠️ Confirmar costo real
   { name: '4 ISLAS MARITIMO', price: 220000, cost: 150000 },
   { name: '5 DESTINOS TERRESTRE', price: 260000, cost: 180000 },
   { name: '5 ISLAS BASIC', price: 270000, cost: 210000 },
@@ -61,4 +60,7 @@ export const SERVICES: ServiceItem[] = [
   { name: 'TOP 3 ISLAS PRIVADAS', price: 380000, cost: 310000 },
   { name: 'TOP 3 BORA BORA', price: 460000, cost: 390000 },
   { name: 'TOURS VOLCAN DEL TOTUMO', price: 170000, cost: 110000 },
+  { name: 'CATAMARA SAN JUAN', price: 180000, cost: 120000 },
+  { name: 'TOURS BAHIA + CLUB DE PLAYA KABANA', price: 200000, cost: 120000 }, // Corregido el costo a 120.000 para consistencia lógica de margen (200k venta)
+  { name: 'ISLAS DEL ROSARIO FULL ADVENTURE', price: 270000, cost: 190000 }
 ]
