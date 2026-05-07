@@ -134,25 +134,97 @@ export default function Dashboard() {
     fetchData()
   }, [fetchData])
 
+  const [filterHotel, setFilterHotel] = useState('')
+  const [filterSeller, setFilterSeller] = useState('')
+  const [filterMonth, setFilterMonth] = useState('')
+  const [filterService, setFilterService] = useState('')
+
+  const [sortField, setSortField] = useState('total')
+  const [sortAsc, setSortAsc] = useState(false)
+
+  const handleSort = (field: string) => {
+    if (sortField === field) {
+      setSortAsc(prev => !prev)
+    } else {
+      setSortField(field)
+      setSortAsc(false)
+    }
+  }
+
+  const renderSortIndicator = (field: string) => {
+    if (sortField !== field) return <span className="text-slate-300 ml-1 text-[10px]">⇅</span>
+    return sortAsc ? <span className="text-[#088DCF] ml-1 text-[10px]">▲</span> : <span className="text-[#088DCF] ml-1 text-[10px]">▼</span>
+  }
+
+  const uniqueHotels = useMemo(() => {
+    return Array.from(new Set(records.map(r => r.hotel).filter(Boolean))).sort()
+  }, [records])
+
+  const uniqueSellers = useMemo(() => {
+    return Array.from(new Set(records.map(r => r.seller).filter(Boolean))).sort()
+  }, [records])
+
+  const uniqueMonths = useMemo(() => {
+    return Array.from(new Set(records.map(r => r.date ? r.date.substring(0, 7) : '').filter(Boolean))).sort().reverse()
+  }, [records])
+
+  const uniqueServices = useMemo(() => {
+    return Array.from(new Set(records.map(r => r.service).filter(Boolean))).sort()
+  }, [records])
+
   const filtered = useMemo(() => {
-    return records.filter(
-      (r) =>
+    return records.filter((r) => {
+      const matchSearch = !searchTerm ? true : (
         r.customer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.hotel?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.service?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.country?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         r.seller?.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [records, searchTerm])
+      )
+      const matchHotel = !filterHotel ? true : r.hotel === filterHotel
+      const matchSeller = !filterSeller ? true : r.seller === filterSeller
+      const matchMonth = !filterMonth ? true : (r.date && r.date.substring(0, 7) === filterMonth)
+      const matchService = !filterService ? true : r.service === filterService
+
+      return matchSearch && matchHotel && matchSeller && matchMonth && matchService
+    })
+  }, [records, searchTerm, filterHotel, filterSeller, filterMonth, filterService])
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [searchTerm, view])
+  }, [searchTerm, view, filterHotel, filterSeller, filterMonth, filterService])
 
   const paginatedList = useMemo(() => {
+    const sorted = [...filtered].sort((a, b) => {
+      let valA: any = a[sortField as keyof SaleRecord] ?? ''
+      let valB: any = b[sortField as keyof SaleRecord] ?? ''
+
+      if (sortField === 'key' || sortField === 'date') {
+        valA = a.date ?? ''
+        valB = b.date ?? ''
+      } else if (sortField === 'total') {
+        valA = a.total_price ?? 0
+        valB = b.total_price ?? 0
+      } else if (sortField === 'balance') {
+        valA = a.total_price - a.deposit
+        valB = b.total_price - b.deposit
+      } else if (sortField === 'customer') {
+        valA = a.customer_name ?? ''
+        valB = b.customer_name ?? ''
+      } else if (sortField === 'count') {
+        valA = a.pax ?? 1
+        valB = b.pax ?? 1
+      }
+
+      if (typeof valA === 'string') {
+        return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA)
+      }
+      return sortAsc ? valA - valB : valB - valA
+    })
+
     const start = (currentPage - 1) * ITEMS_PER_PAGE
-    return filtered.slice(start, start + ITEMS_PER_PAGE)
-  }, [filtered, currentPage])
+    return sorted.slice(start, start + ITEMS_PER_PAGE)
+  }, [filtered, currentPage, sortField, sortAsc])
   
   const totalPages = Math.ceil(filtered.length / ITEMS_PER_PAGE)
 
@@ -230,14 +302,47 @@ export default function Dashboard() {
       }
     })
 
-    return {
-      hotel: Object.entries(byHotel).sort((a, b) => b[1].total - a[1].total),
-      seller: Object.entries(bySeller).sort((a, b) => b[1].total - a[1].total),
-      month: Object.entries(byMonth).sort((a, b) => b[0].localeCompare(a[0])),
-      product: Object.entries(byService).sort((a, b) => b[1].total - a[1].total),
-      cash: Object.entries(byCash).sort((a, b) => b[1].deposit - a[1].deposit),
+    const sortSummaryEntries = (entries: [string, any][], defaultField: string) => {
+      const field = sortField || defaultField
+      return entries.sort((a, b) => {
+        let valA: any
+        let valB: any
+
+        if (field === 'key') {
+          valA = a[0]
+          valB = b[0]
+        } else if (field === 'margen') {
+          valA = a[1].total - a[1].cost
+          valB = b[1].total - b[1].cost
+        } else if (field === 'comHotel') {
+          valA = (a[1].total - a[1].cost) * 0.30
+          valB = (b[1].total - b[1].cost) * 0.30
+        } else if (field === 'comAsesor') {
+          valA = (a[1].total - a[1].cost) * 0.15
+          valB = (b[1].total - b[1].cost) * 0.15
+        } else if (field === 'pax') {
+          valA = a[1].pax ?? a[1].count
+          valB = b[1].pax ?? b[1].count
+        } else {
+          valA = a[1][field] ?? a[1][defaultField] ?? 0
+          valB = b[1][field] ?? b[1][defaultField] ?? 0
+        }
+
+        if (typeof valA === 'string') {
+          return sortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA)
+        }
+        return sortAsc ? valA - valB : valB - valA
+      })
     }
-  }, [filtered])
+
+    return {
+      hotel: sortSummaryEntries(Object.entries(byHotel), 'total'),
+      seller: sortSummaryEntries(Object.entries(bySeller), 'total'),
+      month: sortSummaryEntries(Object.entries(byMonth), 'key'),
+      product: sortSummaryEntries(Object.entries(byService), 'total'),
+      cash: sortSummaryEntries(Object.entries(byCash), 'deposit'),
+    }
+  }, [filtered, sortField, sortAsc])
 
   return (
     <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-5 sm:py-8 animate-fade-in">
@@ -342,12 +447,68 @@ export default function Dashboard() {
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Filtrar datos..."
+              placeholder="Buscar por cliente, país..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-corp flex-1"
             />
             <button onClick={() => exportToCSV(filtered)} className="btn-primary text-xs px-4">📥 Exportar</button>
+          </div>
+
+          {/* Filtros de Panel Inteligente */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-1 border-t border-slate-100/50 pt-2">
+            <div>
+              <label className="text-[10px] font-bold text-[#110E3C]/60 uppercase tracking-wider block mb-1">Hotel</label>
+              <select
+                value={filterHotel}
+                onChange={(e) => setFilterHotel(e.target.value)}
+                className="input-corp w-full text-xs"
+              >
+                <option value="">Todos los Hoteles</option>
+                {uniqueHotels.map(h => (
+                  <option key={h} value={h}>{h}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-[#110E3C]/60 uppercase tracking-wider block mb-1">Asesor</label>
+              <select
+                value={filterSeller}
+                onChange={(e) => setFilterSeller(e.target.value)}
+                className="input-corp w-full text-xs"
+              >
+                <option value="">Todos los Asesores</option>
+                {uniqueSellers.map(s => (
+                  <option key={s} value={s}>{s}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-[#110E3C]/60 uppercase tracking-wider block mb-1">Mes</label>
+              <select
+                value={filterMonth}
+                onChange={(e) => setFilterMonth(e.target.value)}
+                className="input-corp w-full text-xs"
+              >
+                <option value="">Todos los Meses</option>
+                {uniqueMonths.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-[10px] font-bold text-[#110E3C]/60 uppercase tracking-wider block mb-1">Servicio</label>
+              <select
+                value={filterService}
+                onChange={(e) => setFilterService(e.target.value)}
+                className="input-corp w-full text-xs"
+              >
+                <option value="">Todos los Servicios</option>
+                {uniqueServices.map(srv => (
+                  <option key={srv} value={srv}>{srv}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
@@ -370,14 +531,14 @@ export default function Dashboard() {
                 <>
                   <thead>
                     <tr>
-                      <th>Fecha</th>
-                      <th>Cliente</th>
-                      <th>Asesor</th>
-                      <th>Hotel</th>
-                      <th>Servicio</th>
-                      <th className="text-right">Total</th>
-                      <th className="text-right">Saldo</th>
-                      <th className="text-center">Acciones</th>
+                      <th onClick={() => handleSort('date')} className="cursor-pointer hover:bg-white/5 select-none">Fecha {renderSortIndicator('date')}</th>
+                      <th onClick={() => handleSort('customer')} className="cursor-pointer hover:bg-white/5 select-none">Cliente {renderSortIndicator('customer')}</th>
+                      <th onClick={() => handleSort('seller')} className="cursor-pointer hover:bg-white/5 select-none">Asesor {renderSortIndicator('seller')}</th>
+                      <th onClick={() => handleSort('hotel')} className="cursor-pointer hover:bg-white/5 select-none">Hotel {renderSortIndicator('hotel')}</th>
+                      <th onClick={() => handleSort('service')} className="cursor-pointer hover:bg-white/5 select-none">Servicio {renderSortIndicator('service')}</th>
+                      <th onClick={() => handleSort('total')} className="text-right cursor-pointer hover:bg-white/5 select-none">Total {renderSortIndicator('total')}</th>
+                      <th onClick={() => handleSort('balance')} className="text-right cursor-pointer hover:bg-white/5 select-none">Saldo {renderSortIndicator('balance')}</th>
+                      <th className="text-center select-none">Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -418,15 +579,15 @@ export default function Dashboard() {
                 <>
                   <thead>
                     <tr>
-                      <th>Producto / Servicio</th>
-                      <th className="text-center">Pax Vendidos</th>
-                      <th className="text-right">Precio Unit.</th>
-                      <th className="text-right">Costo Unit.</th>
-                      <th className="text-right">Ingreso Bruto</th>
-                      <th className="text-right">Costo Total</th>
-                      <th className="text-right text-emerald-400">Ingreso Neto</th>
-                      <th className="text-right text-orange-400">Comisiones</th>
-                      <th className="text-right text-blue-400">Utilidad Final</th>
+                      <th onClick={() => handleSort('key')} className="cursor-pointer hover:bg-white/5 select-none">Producto / Servicio {renderSortIndicator('key')}</th>
+                      <th onClick={() => handleSort('pax')} className="text-center cursor-pointer hover:bg-white/5 select-none">Pax Vendidos {renderSortIndicator('pax')}</th>
+                      <th className="text-right select-none">Precio Unit.</th>
+                      <th className="text-right select-none">Costo Unit.</th>
+                      <th onClick={() => handleSort('total')} className="text-right cursor-pointer hover:bg-white/5 select-none">Ingreso Bruto {renderSortIndicator('total')}</th>
+                      <th className="text-right select-none">Costo Total</th>
+                      <th onClick={() => handleSort('margen')} className="text-right text-emerald-400 cursor-pointer hover:bg-white/5 select-none">Ingreso Neto {renderSortIndicator('margen')}</th>
+                      <th className="text-right text-orange-400 select-none">Comisiones</th>
+                      <th className="text-right text-blue-400 select-none">Utilidad Final</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -495,19 +656,21 @@ export default function Dashboard() {
                 <>
                   <thead>
                     <tr>
-                      <th>{view === 'hotel' ? 'Hotel' : view === 'seller' ? 'Asesor' : view === 'cash' ? 'Hotel (Solo Efectivo)' : 'Mes'}</th>
-                      {view === 'hotel' && <th>Productos Vendidos</th>}
-                      <th className="text-center">Cant. Reservas</th>
-                      {view !== 'cash' && <th className="text-right">Producción Bruta</th>}
-                      {view !== 'cash' && <th className="text-right text-red-400">Costo Total</th>}
-                      {view !== 'cash' && <th className="text-right text-emerald-300">Margen (Bruto−Costo)</th>}
-                      <th className="text-right">{view === 'cash' ? 'Efectivo en Caja (Abono)' : 'Recaudado'}</th>
-                      {view !== 'cash' && <th className="text-right">Por Cobrar</th>}
+                      <th onClick={() => handleSort('key')} className="cursor-pointer hover:bg-white/5 select-none">
+                        {view === 'hotel' ? 'Hotel' : view === 'seller' ? 'Asesor' : view === 'cash' ? 'Hotel (Solo Efectivo)' : 'Mes'} {renderSortIndicator('key')}
+                      </th>
+                      {view === 'hotel' && <th className="select-none">Productos Vendidos</th>}
+                      <th onClick={() => handleSort('count')} className="text-center cursor-pointer hover:bg-white/5 select-none">Cant. Reservas {renderSortIndicator('count')}</th>
+                      {view !== 'cash' && <th onClick={() => handleSort('total')} className="text-right cursor-pointer hover:bg-white/5 select-none">Producción Bruta {renderSortIndicator('total')}</th>}
+                      {view !== 'cash' && <th onClick={() => handleSort('cost')} className="text-right text-red-400 cursor-pointer hover:bg-white/5 select-none">Costo Total {renderSortIndicator('cost')}</th>}
+                      {view !== 'cash' && <th onClick={() => handleSort('margen')} className="text-right text-emerald-300 cursor-pointer hover:bg-white/5 select-none">Margen (Bruto−Costo) {renderSortIndicator('margen')}</th>}
+                      <th onClick={() => handleSort('deposit')} className="text-right cursor-pointer hover:bg-white/5 select-none">{view === 'cash' ? 'Efectivo en Caja (Abono)' : 'Recaudado'} {renderSortIndicator('deposit')}</th>
+                      {view !== 'cash' && <th onClick={() => handleSort('balance')} className="text-right cursor-pointer hover:bg-white/5 select-none">Por Cobrar {renderSortIndicator('balance')}</th>}
                       {(view === 'hotel' || view === 'month') && (
-                        <th className="text-right text-orange-400">Comisión Hotel (30%)</th>
+                        <th onClick={() => handleSort('comHotel')} className="text-right text-orange-400 cursor-pointer hover:bg-white/5 select-none">Comisión Hotel (30%) {renderSortIndicator('comHotel')}</th>
                       )}
                       {(view === 'seller' || view === 'month') && (
-                        <th className="text-right text-yellow-400">Comisión Asesor (15%)</th>
+                        <th onClick={() => handleSort('comAsesor')} className="text-right text-yellow-400 cursor-pointer hover:bg-white/5 select-none">Comisión Asesor (15%) {renderSortIndicator('comAsesor')}</th>
                       )}
                     </tr>
                   </thead>
