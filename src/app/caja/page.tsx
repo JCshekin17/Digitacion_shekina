@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase, type CashRecord } from '@/lib/supabase'
-import { Wallet, Calendar, User, DollarSign, Calculator, Info, Trash2, PlusCircle, CheckCircle, RefreshCw, AlertCircle, Copy } from 'lucide-react'
+import { Wallet, Calendar, User, DollarSign, Calculator, Info, Trash2, PlusCircle, CheckCircle, RefreshCw, AlertCircle, Copy, UploadCloud, FileText, X, ExternalLink } from 'lucide-react'
 import Image from 'next/image'
 
 const ADVISORS = ['YIRLEY', 'KEREN', 'GABRIELA']
@@ -29,6 +29,7 @@ export default function CajaPage() {
   const [showSqlHelp, setShowSqlHelp] = useState(false)
   const [isCopied, setIsCopied] = useState(false)
   const [noConsignment, setNoConsignment] = useState(false)
+  const [proofFile, setProofFile] = useState<File | null>(null)
 
   // Calcule balance live
   const fAmt = Number(foundAmount) || 0
@@ -105,15 +106,37 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
     const finalAdvisor = noConsignment ? `${advisor} (SIN CONSIGNACIÓN)` : advisor
     const finalConsignedAmount = noConsignment ? fAmt : cAmt
 
-    const newRecord: CashRecord = {
-      date,
-      advisor: finalAdvisor,
-      found_amount: fAmt,
-      consigned_amount: finalConsignedAmount,
-      balance,
-    }
-
     try {
+      let finalProofUrl = ''
+
+      if (proofFile && !noConsignment) {
+        const fileExt = proofFile.name.split('.').pop()
+        const fileName = `caja_${Date.now()}_${Math.random()}.${fileExt}`
+
+        const { error: uploadError } = await supabase.storage
+          .from('receipts')
+          .upload(fileName, proofFile)
+
+        if (uploadError) {
+          throw new Error('Error al subir el comprobante: ' + uploadError.message)
+        }
+
+        const { data: publicUrlData } = supabase.storage
+          .from('receipts')
+          .getPublicUrl(fileName)
+
+        finalProofUrl = publicUrlData.publicUrl
+      }
+
+      const newRecord: CashRecord = {
+        date,
+        advisor: finalAdvisor,
+        found_amount: fAmt,
+        consigned_amount: finalConsignedAmount,
+        balance,
+        proof_url: finalProofUrl,
+      }
+
       // Intenta guardar en Supabase sin incluir la columna generada 'balance'
       const { error: sbError } = await supabase
         .from('cash_records')
@@ -121,7 +144,8 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
           date,
           advisor: finalAdvisor,
           found_amount: fAmt,
-          consigned_amount: finalConsignedAmount
+          consigned_amount: finalConsignedAmount,
+          proof_url: finalProofUrl
         }])
 
       if (sbError) {
@@ -138,11 +162,18 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
         setFoundAmount('')
         setConsignedAmount('')
         setNoConsignment(false)
+        setProofFile(null)
         fetchRecords()
       }
     } catch (err: any) {
       // Fallback
-      saveLocally(newRecord)
+      saveLocally({
+        date,
+        advisor: finalAdvisor,
+        found_amount: fAmt,
+        consigned_amount: finalConsignedAmount,
+        balance,
+      })
       setShowSqlHelp(true)
     } finally {
       setSaving(false)
@@ -388,6 +419,51 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
               </div>
             </div>
 
+            {/* Comprobante de Consignación */}
+            {!noConsignment && (
+              <div className="animate-fade-in mt-2">
+                <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5">
+                  <UploadCloud className="w-3.5 h-3.5 text-slate-400" /> Comprobante de Consignación
+                </label>
+                <div className="relative border-2 border-dashed border-slate-200 hover:border-[#088DCF]/40 bg-slate-50 hover:bg-[#088DCF]/02 rounded-2xl p-4 transition-all text-center cursor-pointer group">
+                  <input
+                    type="file"
+                    accept="image/*,application/pdf"
+                    onChange={(e) => {
+                      if (e.target.files && e.target.files[0]) {
+                        setProofFile(e.target.files[0])
+                      }
+                    }}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                  {proofFile ? (
+                    <div className="flex items-center justify-between gap-2 text-xs font-semibold text-slate-700 bg-white border border-slate-100 p-2 rounded-xl">
+                      <div className="flex items-center gap-2 truncate">
+                        <FileText className="w-4 h-4 text-[#088DCF] shrink-0" />
+                        <span className="truncate">{proofFile.name}</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          setProofFile(null)
+                        }}
+                        className="p-1 text-slate-400 hover:text-red-500 hover:bg-slate-100 rounded-lg transition-colors shrink-0"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="py-2">
+                      <UploadCloud className="w-6 h-6 text-slate-400 group-hover:text-[#088DCF] mx-auto mb-1.5 transition-colors" />
+                      <p className="text-xs font-bold text-slate-500 group-hover:text-[#088DCF] transition-colors">Seleccionar comprobante</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-medium">Formatos: PNG, JPG, PDF</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+
             {/* Live Subtraction Card (Arqueo Actual) */}
             <div className="mt-6 p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex flex-col gap-2 shadow-inner">
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
@@ -487,13 +563,26 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
                           </span>
                         </td>
                         <td className="py-3.5 text-center">
-                          <button
-                            onClick={() => r.id && handleDelete(r.id)}
-                            className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                            title="Eliminar Registro de Caja"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <div className="flex items-center justify-center gap-1.5">
+                            {r.proof_url && (
+                              <a
+                                href={r.proof_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="p-1.5 text-[#088DCF] hover:text-[#077db8] hover:bg-[#088DCF]/08 rounded-lg transition-all"
+                                title="Ver Comprobante de Consignación"
+                              >
+                                <ExternalLink className="w-4 h-4" />
+                              </a>
+                            )}
+                            <button
+                              onClick={() => r.id && handleDelete(r.id)}
+                              className="p-1.5 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                              title="Eliminar Registro de Caja"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     )
