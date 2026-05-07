@@ -67,10 +67,13 @@ export async function middleware(req: NextRequest) {
   }
 
   // ── 2. Protección de Rutas con Supabase Auth ─────────────────
-  const supabaseToken = req.cookies.get('sb-sunjrcecovsmiqynwxfd-auth-token')?.value ||
-                        req.cookies.get('sb-access-token')?.value
-
-  const isAuthenticated = !!supabaseToken
+  // Supabase v2 divide el token en múltiples cookies (e.g. sb-xxx-auth-token.0, .1)
+  // Por eso buscamos cualquier cookie que comience con el prefijo del proyecto.
+  const SUPABASE_COOKIE_PREFIX = 'sb-sunjrcecovsmiqynwxfd-auth-token'
+  const allCookies = req.cookies.getAll()
+  const isAuthenticated = allCookies.some(
+    (c) => c.name.startsWith(SUPABASE_COOKIE_PREFIX) && c.value
+  )
   const isProtected = PROTECTED_ROUTES.some((r) => pathname.startsWith(r))
   const isPublicOnly  = PUBLIC_ONLY_ROUTES.some((r) => pathname.startsWith(r))
 
