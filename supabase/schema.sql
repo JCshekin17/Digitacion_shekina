@@ -57,3 +57,21 @@ SELECT
 FROM public.sales_records;
 
 COMMENT ON TABLE public.sales_records IS 'Registros de ventas y reservas - Shekina Tours y Logística';
+
+-- Tabla de registros de caja
+CREATE TABLE IF NOT EXISTS public.cash_records (
+  id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  date          DATE NOT NULL,
+  advisor       TEXT NOT NULL,
+  found_amount  NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  consigned_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount) STORED
+);
+
+ALTER TABLE public.cash_records ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Allow public read" ON public.cash_records FOR SELECT USING (true);
+CREATE POLICY "Allow public insert" ON public.cash_records FOR INSERT WITH CHECK (true);
+CREATE POLICY "Allow public update" ON public.cash_records FOR UPDATE USING (true);
+CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (true);

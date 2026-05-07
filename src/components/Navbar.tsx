@@ -4,7 +4,7 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import Image from 'next/image'
-import { LayoutDashboard, PenSquare, Menu, X } from 'lucide-react'
+import { LayoutDashboard, PenSquare, Menu, X, Wallet } from 'lucide-react'
 
 export default function Navbar() {
   const pathname = usePathname()
@@ -12,6 +12,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/ventas',    label: 'Ingreso de Ventas', shortLabel: 'Ventas',    icon: <PenSquare className="w-4 h-4" /> },
+    { href: '/caja',      label: 'Registro de Caja',   shortLabel: 'Caja',      icon: <Wallet className="w-4 h-4" /> },
     { href: '/dashboard', label: 'Panel de Control',  shortLabel: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
   ]
 
@@ -84,7 +85,7 @@ export default function Navbar() {
                 <div>
                   <p className="font-bold">{link.label}</p>
                   <p className="text-xs text-slate-500 font-normal">
-                    {link.href === '/ventas' ? 'Registrar nueva reserva' : 'KPIs y reportes CSV'}
+                    {link.href === '/ventas' ? 'Registrar nueva reserva' : link.href === '/caja' ? 'Control y arqueo de caja' : 'KPIs y reportes CSV'}
                   </p>
                 </div>
               </Link>

@@ -33,3 +33,13 @@ export type SaleRecord = {
   payment_method?: string
   payment_proof_url?: string
 }
+
+export type CashRecord = {
+  id?: string
+  created_at?: string
+  date: string
+  advisor: 'YIRLEY' | 'KEREN' | 'GABRIELA' | string
+  found_amount: number
+  consigned_amount: number
+  balance: number
+}
