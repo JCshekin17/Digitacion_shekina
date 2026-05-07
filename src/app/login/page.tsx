@@ -53,7 +53,7 @@ export default function LoginPage() {
       setLoading(false)
     } else {
       attemptsRef.current = 0
-      router.push('/dashboard')
+      router.replace('/dashboard')
     }
   }
 

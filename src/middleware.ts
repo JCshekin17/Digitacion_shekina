@@ -5,9 +5,9 @@ import type { NextRequest } from 'next/server'
 const rateLimitStore = new Map<string, { count: number; resetAt: number }>()
 
 const RATE_LIMITS: Record<string, { max: number; windowMs: number }> = {
-  '/login':     { max: 5,  windowMs: 60_000 },  // 5 intentos / minuto
-  '/ventas':    { max: 30, windowMs: 60_000 },  // 30 registros / minuto
-  '/dashboard': { max: 60, windowMs: 60_000 },  // 60 peticiones / minuto
+  '/login':     { max: 60,  windowMs: 60_000 },  // 60 req / minuto (Next.js RSC hace múltiples requests por navegación)
+  '/ventas':    { max: 120, windowMs: 60_000 },  // 120 req / minuto
+  '/dashboard': { max: 120, windowMs: 60_000 },  // 120 req / minuto
 }
 
 function getClientIp(req: NextRequest): string {
