@@ -194,7 +194,10 @@ export default function Dashboard() {
       const dep = r.deposit || 0
       const pax = r.pax || 1
       
-      const serviceInfo = SERVICES.find(serv => serv.name === r.service)
+      // Búsqueda insensible a mayúsculas/espacios para garantizar match con SERVICES
+      const serviceInfo = SERVICES.find(
+        serv => serv.name.trim().toLowerCase() === (r.service || '').trim().toLowerCase()
+      )
       const cost = (serviceInfo?.cost || 0) * pax
 
       byHotel[h].count++
@@ -497,6 +500,7 @@ export default function Dashboard() {
                       <th className="text-center">Cant. Reservas</th>
                       {view !== 'cash' && <th className="text-right">Producción Bruta</th>}
                       {view !== 'cash' && <th className="text-right text-red-400">Costo Total</th>}
+                      {view !== 'cash' && <th className="text-right text-emerald-300">Margen (Bruto−Costo)</th>}
                       <th className="text-right">{view === 'cash' ? 'Efectivo en Caja (Abono)' : 'Recaudado'}</th>
                       {view !== 'cash' && <th className="text-right">Por Cobrar</th>}
                       {(view === 'hotel' || view === 'month') && (
@@ -529,6 +533,7 @@ export default function Dashboard() {
                           </td>
                           {view !== 'cash' && <td className="text-right text-white font-black">{formatCurrency(val.total)}</td>}
                           {view !== 'cash' && <td className="text-right text-red-400 font-bold">-{formatCurrency((val as any).cost)}</td>}
+                          {view !== 'cash' && <td className="text-right text-emerald-300 font-black">{formatCurrency(margen)}</td>}
                           <td className="text-right text-emerald-400 font-bold">{formatCurrency(val.deposit)}</td>
                           {view !== 'cash' && <td className="text-right text-orange-400 font-bold">{formatCurrency(val.total - val.deposit)}</td>}
                           {(view === 'hotel' || view === 'month') && (
@@ -556,6 +561,11 @@ export default function Dashboard() {
                       {view !== 'cash' && (
                         <td className="text-right font-black text-red-400">
                           -{formatCurrency(kpis.total_cost)}
+                        </td>
+                      )}
+                      {view !== 'cash' && (
+                        <td className="text-right font-black text-emerald-300">
+                          {formatCurrency(kpis.total_sales - kpis.total_cost)}
                         </td>
                       )}
                       <td className="text-right font-black text-emerald-400">
