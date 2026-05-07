@@ -21,9 +21,9 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1,
-  userScalable: false,
-  themeColor: '#070e1a',
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#110E3C',
 }
 
 export default function RootLayout({
@@ -34,7 +34,8 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-[#070e1a] min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
+        style={{ background: '#f4f6fa' }}
       >
         <Navbar />
         <main className="min-h-[calc(100vh-56px)] sm:min-h-[calc(100vh-64px)]">

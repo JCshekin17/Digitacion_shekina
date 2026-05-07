@@ -1,10 +1,19 @@
 import { createClient } from '@supabase/supabase-js'
 
-// Hardcoded with the EXACT key provided in the conversation
-const supabaseUrl = 'https://sunjrcecovsmiqynwxfd.supabase.co'
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN1bmpyY2Vjb3ZzbWlxeW53eGZkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NzExMjcsImV4cCI6MjA5MzA0NzEyN30.-3o4pqh3ILm6Igrf8n5b0D9B8mcNXrJ2li8QAdMFPfE'
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
-export const supabase = createClient(supabaseUrl, supabaseAnonKey)
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Missing Supabase environment variables. Check your .env.local file.')
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    autoRefreshToken: true,
+    detectSessionInUrl: false,
+  },
+})
 
 export type SaleRecord = {
   id?: string
