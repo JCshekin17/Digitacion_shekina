@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { supabase, type SaleRecord } from '@/lib/supabase'
-import { SERVICES } from '@/lib/services'
+import { SERVICES, normalizeServiceName } from '@/lib/services'
 import CalendarView from './CalendarView'
 import { BarChart3, CircleDollarSign, CheckCircle2, Clock, ClipboardList, Hotel, User, Calendar, CalendarDays, TrendingUp, Banknote } from 'lucide-react'
 import Image from 'next/image'
@@ -194,9 +194,9 @@ export default function Dashboard() {
       const dep = r.deposit || 0
       const pax = r.pax || 1
       
-      // Búsqueda insensible a mayúsculas/espacios para garantizar match con SERVICES
+      // Búsqueda insensible a mayúsculas/espacios/tildes para garantizar match con SERVICES
       const serviceInfo = SERVICES.find(
-        serv => serv.name.trim().toLowerCase() === (r.service || '').trim().toLowerCase()
+        serv => normalizeServiceName(serv.name) === normalizeServiceName(r.service || '')
       )
       const cost = (serviceInfo?.cost || 0) * pax
 
@@ -638,6 +638,7 @@ export default function Dashboard() {
                     phone: editingRecord.phone,
                     hotel: editingRecord.hotel,
                     service: editingRecord.service,
+                    pax: editingRecord.pax,
                     total_price: editingRecord.total_price,
                     deposit: editingRecord.deposit,
                     balance: updatedBalance
@@ -666,19 +667,83 @@ export default function Dashboard() {
                   <input type="text" value={editingRecord.hotel || ''} onChange={e => setEditingRecord({...editingRecord, hotel: e.target.value})} className="input-corp" />
                 </div>
               </div>
+              {/* Servicio / Destino — dropdown del catálogo */}
               <div>
                 <label className="label-corp">Servicio / Destino</label>
-                <input type="text" value={editingRecord.service || ''} onChange={e => setEditingRecord({...editingRecord, service: e.target.value})} className="input-corp" />
+                <select
+                  value={editingRecord.service || ''}
+                  onChange={e => {
+                    const selectedService = SERVICES.find(s => s.name === e.target.value)
+                    const pax = editingRecord.pax || 1
+                    const newTotal = selectedService ? selectedService.price * pax : editingRecord.total_price
+                    setEditingRecord({
+                      ...editingRecord,
+                      service: e.target.value,
+                      total_price: newTotal,
+                    })
+                  }}
+                  className="input-corp"
+                  required
+                >
+                  <option value="">— Selecciona un servicio —</option>
+                  {SERVICES.map(s => (
+                    <option key={s.name} value={s.name}>{s.name}</option>
+                  ))}
+                </select>
               </div>
+
+              {/* PAX + Precio calculado */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="label-corp">Precio Total (COP)</label>
-                  <input type="number" value={editingRecord.total_price || 0} onChange={e => setEditingRecord({...editingRecord, total_price: Number(e.target.value)})} className="input-corp" required />
+                  <label className="label-corp">PAX (Personas)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={editingRecord.pax || 1}
+                    onChange={e => {
+                      const pax = Math.max(1, Number(e.target.value))
+                      const selectedService = SERVICES.find(s => s.name === editingRecord.service)
+                      const newTotal = selectedService ? selectedService.price * pax : editingRecord.total_price
+                      setEditingRecord({ ...editingRecord, pax, total_price: newTotal })
+                    }}
+                    className="input-corp"
+                    required
+                  />
                 </div>
                 <div>
-                  <label className="label-corp">Abono (COP)</label>
-                  <input type="number" value={editingRecord.deposit || 0} onChange={e => setEditingRecord({...editingRecord, deposit: Number(e.target.value)})} className="input-corp" required />
+                  <label className="label-corp">Precio Total (COP)</label>
+                  <input
+                    type="number"
+                    value={editingRecord.total_price || 0}
+                    onChange={e => setEditingRecord({...editingRecord, total_price: Number(e.target.value)})}
+                    className="input-corp"
+                    required
+                  />
+                  {(() => {
+                    const srv = SERVICES.find(s => s.name === editingRecord.service)
+                    const expectedPrice = srv ? srv.price * (editingRecord.pax || 1) : null
+                    return expectedPrice !== null && expectedPrice !== editingRecord.total_price ? (
+                      <p className="text-[10px] text-yellow-400 mt-1">
+                        ⚠️ Precio sugerido: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(expectedPrice)}
+                      </p>
+                    ) : null
+                  })()}
                 </div>
+              </div>
+
+              {/* Abono */}
+              <div>
+                <label className="label-corp">Abono (COP)</label>
+                <input
+                  type="number"
+                  value={editingRecord.deposit || 0}
+                  onChange={e => setEditingRecord({...editingRecord, deposit: Number(e.target.value)})}
+                  className="input-corp"
+                  required
+                />
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Saldo pendiente: {new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0 }).format(editingRecord.total_price - editingRecord.deposit)}
+                </p>
               </div>
               
               <div className="flex gap-3 justify-end mt-8 pt-4 border-t border-white/10">

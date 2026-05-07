@@ -4,7 +4,18 @@ export interface ServiceItem {
   cost: number
 }
 
+// Normaliza nombre para comparación: sin tildes, minúsculas, espacios simples
+export function normalizeServiceName(s: string): string {
+  return (s || '')
+    .trim()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // elimina diacríticos/tildes
+    .replace(/\s+/g, ' ')            // colapsa espacios múltiples
+}
+
 export const SERVICES: ServiceItem[] = [
+  { name: 'FULL ADVENTURE', price: 270000, cost: 210000 }, // ⚠️ Confirmar costo real
   { name: '4 ISLAS MARITIMO', price: 220000, cost: 150000 },
   { name: '5 DESTINOS TERRESTRE', price: 260000, cost: 180000 },
   { name: '5 ISLAS BASIC', price: 270000, cost: 210000 },
