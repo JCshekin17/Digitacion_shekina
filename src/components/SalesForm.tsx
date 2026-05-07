@@ -19,7 +19,7 @@ const HOTELS = [
 // ── Estado inicial del formulario ────────────────────────────
 type FormState = Omit<SaleRecord, 'id' | 'created_at' | 'balance' | 'payment_proof_url' | 'service' | 'pax'> & { 
   base_price: number;
-  services: { service: string; pax: number; base_price: number }[];
+  services: { service: string; pax: number | string; base_price: number }[];
 }
 
 const INITIAL_FORM: FormState = {
@@ -283,10 +283,12 @@ export default function SalesForm() {
 
       if (field === 'service') {
         const srv = SERVICES.find(s => s.name === value)
-        newServices[index].base_price = srv ? srv.price * newServices[index].pax : 0
+        const currentPax = newServices[index].pax === '' ? 0 : Number(newServices[index].pax)
+        newServices[index].base_price = srv ? srv.price * currentPax : 0
       } else if (field === 'pax') {
         const srv = SERVICES.find(s => s.name === newServices[index].service)
-        newServices[index].base_price = srv ? srv.price * (value as number) : 0
+        const currentPax = value === '' ? 0 : Number(value)
+        newServices[index].base_price = srv ? srv.price * currentPax : 0
       }
 
       const totalBase = newServices.reduce((sum, s) => sum + s.base_price, 0)
@@ -371,7 +373,7 @@ export default function SalesForm() {
           ...restForm,
           hotel: finalHotel,
           service: s.service,
-          pax: s.pax,
+          pax: s.pax === '' ? 1 : Number(s.pax),
           total_price: currentTotalPrice,
           discount: currentDiscount,
           deposit: currentDeposit,
@@ -493,7 +495,7 @@ export default function SalesForm() {
                   <label className="label-corp text-[10px]">Pax *</label>
                   <input
                     type="number" min="1" max="100" required
-                    value={svc.pax} onChange={(e) => handleServiceItemChange(index, 'pax', parseInt(e.target.value) || 1)} className="input-corp"
+                    value={svc.pax} onChange={(e) => handleServiceItemChange(index, 'pax', e.target.value === '' ? '' : parseInt(e.target.value))} className="input-corp"
                   />
                 </div>
                 {form.services.length > 1 && (
