@@ -110,10 +110,15 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
     }
 
     try {
-      // Intenta guardar en Supabase
+      // Intenta guardar en Supabase sin incluir la columna generada 'balance'
       const { error: sbError } = await supabase
         .from('cash_records')
-        .insert([newRecord])
+        .insert([{
+          date,
+          advisor,
+          found_amount: fAmt,
+          consigned_amount: cAmt
+        }])
 
       if (sbError) {
         if (sbError.message.includes('Could not find') || sbError.message.includes('does not exist')) {
