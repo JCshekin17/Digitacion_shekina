@@ -21,7 +21,7 @@ const HOTELS = [
 // ── Estado inicial del formulario ────────────────────────────
 type FormState = Omit<SaleRecord, 'id' | 'created_at' | 'balance' | 'payment_proof_url' | 'service' | 'pax'> & { 
   base_price: number;
-  services: { service: string; pax: number | string; base_price: number }[];
+  services: { service: string; pax: number | string; base_price: number; date: string }[];
 }
 
 const INITIAL_FORM: FormState = {
@@ -34,7 +34,7 @@ const INITIAL_FORM: FormState = {
   city: '',
   hotel: '',
   room: '',
-  services: [{ service: '', pax: 1, base_price: 0 }],
+  services: [{ service: '', pax: 1, base_price: 0, date: new Date().toISOString().split('T')[0] }],
   total_price: 0,
   base_price: 0,
   discount: 0,
@@ -53,7 +53,7 @@ function formatCurrency(value: number) {
 }
 
 function buildWhatsAppMessage(data: FormState & { balance: number; surcharge: number }) {
-  const servicesList = data.services.map(s => `• ${s.pax}x ${s.service || 'N/A'}`).join('\n')
+  const servicesList = data.services.map(s => `• ${s.pax}x ${s.service || 'N/A'} (${s.date})`).join('\n')
 
   const lines = [
     `*Nueva Reserva - Shekina 2.0* 🌴`,
@@ -260,7 +260,11 @@ export default function SalesForm() {
       setForm((prev) => {
         const next = { ...prev, [name]: finalValue }
         
-        if (name === 'discount') {
+        if (name === 'date') {
+          // Sync service dates that match the old main date
+          const oldDate = prev.date
+          next.services = prev.services.map(s => s.date === oldDate ? { ...s, date: finalValue as string } : s)
+        } else if (name === 'discount') {
           next.total_price = Math.max(0, (next.base_price || 0) - (finalValue as number))
         } else if (name === 'base_price') {
           next.total_price = Math.max(0, (finalValue as number) - (next.discount || 0))
@@ -278,7 +282,7 @@ export default function SalesForm() {
     setForm((prev) => ({ ...prev, country, city: '' }))
   }, [])
 
-  const handleServiceItemChange = useCallback((index: number, field: 'service' | 'pax', value: string | number) => {
+  const handleServiceItemChange = useCallback((index: number, field: 'service' | 'pax' | 'date', value: string | number) => {
     setForm(prev => {
       const newServices = [...prev.services]
       newServices[index] = { ...newServices[index], [field]: value }
@@ -303,7 +307,11 @@ export default function SalesForm() {
     })
   }, [])
 
-  const addService = () => setForm(prev => ({ ...prev, services: [...prev.services, { service: '', pax: 1, base_price: 0 }] }))
+  const addService = () => setForm(prev => ({
+    ...prev,
+    services: [...prev.services, { service: '', pax: 1, base_price: 0, date: prev.date }]
+  }))
+
   const removeService = (index: number) => setForm(prev => {
     if (prev.services.length <= 1) return prev
     const newServices = prev.services.filter((_, i) => i !== index)
@@ -373,6 +381,7 @@ export default function SalesForm() {
 
         return {
           ...restForm,
+          date: s.date,
           hotel: finalHotel,
           service: s.service,
           pax: s.pax === '' ? 1 : Number(s.pax),
@@ -508,6 +517,15 @@ export default function SalesForm() {
                   <input
                     type="number" min="1" max="100" required
                     value={svc.pax} onChange={(e) => handleServiceItemChange(index, 'pax', e.target.value === '' ? '' : parseInt(e.target.value))} className="input-corp"
+                  />
+                </div>
+                <div className="w-full sm:w-36">
+                  <label className="label-corp text-[10px]">Fecha Servicio *</label>
+                  <input
+                    type="date" required
+                    value={svc.date}
+                    onChange={(e) => handleServiceItemChange(index, 'date', e.target.value)}
+                    className="input-corp text-xs"
                   />
                 </div>
                 {form.services.length > 1 && (
