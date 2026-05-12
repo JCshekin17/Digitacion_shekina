@@ -37,6 +37,8 @@ export default function CajaPage() {
   const balance = noConsignment ? 0 : (fAmt - cAmt)
 
   const sqlQuery = `-- EJECUTA ESTO EN TU SQL EDITOR DE SUPABASE PARA EL REGISTRO DE CAJA:
+
+-- 1. CREAR LA TABLA
 CREATE TABLE IF NOT EXISTS public.cash_records (
   id            UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
@@ -44,15 +46,37 @@ CREATE TABLE IF NOT EXISTS public.cash_records (
   advisor       TEXT NOT NULL,
   found_amount  NUMERIC(12, 2) NOT NULL DEFAULT 0,
   consigned_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
-  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount) STORED
+  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount) STORED,
+  proof_url     TEXT
 );
 
+-- SI LA TABLA YA EXISTÍA, AÑADIR LA COLUMNA FALTANTE:
+ALTER TABLE public.cash_records ADD COLUMN IF NOT EXISTS proof_url TEXT;
+
+-- 2. POLÍTICAS DE LA TABLA
 ALTER TABLE public.cash_records ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Allow public read" ON public.cash_records;
 CREATE POLICY "Allow public read" ON public.cash_records FOR SELECT USING (true);
+
+DROP POLICY IF EXISTS "Allow public insert" ON public.cash_records;
 CREATE POLICY "Allow public insert" ON public.cash_records FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow public update" ON public.cash_records;
 CREATE POLICY "Allow public update" ON public.cash_records FOR UPDATE USING (true);
-CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (true);`;
+
+DROP POLICY IF EXISTS "Allow public delete" ON public.cash_records;
+CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (true);
+
+-- 3. CREAR EL BUCKET PARA LOS COMPROBANTES Y SUS POLÍTICAS
+INSERT INTO storage.buckets (id, name, public) VALUES ('receipts', 'receipts', true) ON CONFLICT (id) DO NOTHING;
+
+DROP POLICY IF EXISTS "Allow public read" ON storage.objects;
+CREATE POLICY "Allow public read" ON storage.objects FOR SELECT USING (bucket_id = 'receipts');
+
+DROP POLICY IF EXISTS "Allow public insert" ON storage.objects;
+CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bucket_id = 'receipts');
+`;
 
   // Fetch records
   const fetchRecords = async () => {
@@ -166,6 +190,7 @@ CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (tru
         fetchRecords()
       }
     } catch (err: any) {
+      console.error("Error guardando en Supabase:", err);
       // Fallback
       saveLocally({
         date,
