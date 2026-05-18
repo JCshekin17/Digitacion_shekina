@@ -67,7 +67,8 @@ CREATE TABLE IF NOT EXISTS public.cash_records (
   found_amount  NUMERIC(12, 2) NOT NULL DEFAULT 0,
   consigned_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
   received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
-  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount) STORED,
+  cash_handed_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount - cash_handed_amount) STORED,
   proof_url     TEXT
 );
 

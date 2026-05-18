@@ -21,6 +21,7 @@ export default function CajaPage() {
   const [advisor, setAdvisor] = useState('')
   const [foundAmount, setFoundAmount] = useState<number | ''>('')
   const [receivedAmount, setReceivedAmount] = useState<number | ''>('')
+  const [cashHandedAmount, setCashHandedAmount] = useState<number | ''>('')
   const [consignedAmount, setConsignedAmount] = useState<number | ''>('')
   const [records, setRecords] = useState<CashRecord[]>([])
   const [loading, setLoading] = useState(false)
@@ -35,7 +36,9 @@ export default function CajaPage() {
   // Calcule balance live
   const fAmt = Number(foundAmount) || 0
   const cAmt = Number(consignedAmount) || 0
-  const balance = noConsignment ? 0 : (fAmt - cAmt)
+  const hAmt = Number(cashHandedAmount) || 0
+  const finalConsignedAmountUI = noConsignment ? Math.max(0, fAmt - hAmt) : cAmt
+  const balance = noConsignment ? 0 : (fAmt - finalConsignedAmountUI - hAmt)
 
   const sqlQuery = `-- EJECUTA ESTO EN TU SQL EDITOR DE SUPABASE PARA EL REGISTRO DE CAJA:
 
@@ -48,13 +51,17 @@ CREATE TABLE IF NOT EXISTS public.cash_records (
   found_amount  NUMERIC(12, 2) NOT NULL DEFAULT 0,
   consigned_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
   received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
-  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount) STORED,
+  cash_handed_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount - cash_handed_amount) STORED,
   proof_url     TEXT
 );
 
--- SI LA TABLA YA EXISTÍA, AÑADIR LA COLUMNA FALTANTE:
+-- SI LA TABLA YA EXISTÍA, AÑADIR LA COLUMNA FALTANTE Y RECREAR EL BALANCE:
 ALTER TABLE public.cash_records ADD COLUMN IF NOT EXISTS proof_url TEXT;
 ALTER TABLE public.cash_records ADD COLUMN IF NOT EXISTS received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0;
+ALTER TABLE public.cash_records ADD COLUMN IF NOT EXISTS cash_handed_amount NUMERIC(12, 2) NOT NULL DEFAULT 0;
+ALTER TABLE public.cash_records DROP COLUMN IF EXISTS balance;
+ALTER TABLE public.cash_records ADD COLUMN balance NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount - cash_handed_amount) STORED;
 
 -- 2. POLÍTICAS DE LA TABLA
 ALTER TABLE public.cash_records ENABLE ROW LEVEL SECURITY;
@@ -132,7 +139,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
     setSuccess(false)
 
     const finalAdvisor = noConsignment ? `${advisor} (SIN CONSIGNACIÓN)` : advisor
-    const finalConsignedAmount = noConsignment ? fAmt : cAmt
+    const finalConsignedAmount = noConsignment ? Math.max(0, fAmt - hAmt) : cAmt
     const rAmt = Number(receivedAmount) || 0
 
     try {
@@ -163,19 +170,18 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         found_amount: fAmt,
         consigned_amount: finalConsignedAmount,
         received_amount: rAmt,
+        cash_handed_amount: hAmt,
         balance,
         proof_url: finalProofUrl,
       }
 
-      // Intenta guardar en Supabase sin incluir la columna generada 'balance'
-      const { error: sbError } = await supabase
-        .from('cash_records')
         .insert([{
           date,
           advisor: finalAdvisor,
           found_amount: fAmt,
           consigned_amount: finalConsignedAmount,
           received_amount: rAmt,
+          cash_handed_amount: hAmt,
           proof_url: finalProofUrl
         }])
 
@@ -193,6 +199,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         setFoundAmount('')
         setReceivedAmount('')
         setConsignedAmount('')
+        setCashHandedAmount('')
         setNoConsignment(false)
         setProofFile(null)
         fetchRecords()
@@ -206,6 +213,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         found_amount: fAmt,
         consigned_amount: finalConsignedAmount,
         received_amount: rAmt,
+        cash_handed_amount: hAmt,
         balance,
       })
       setShowSqlHelp(true)
@@ -228,6 +236,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
     setAdvisor('')
     setFoundAmount('')
     setReceivedAmount('')
+    setCashHandedAmount('')
     setConsignedAmount('')
     setTimeout(() => setSuccess(false), 5000)
   }
@@ -439,6 +448,28 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
               <p className="text-[10px] text-slate-400 mt-1 font-medium px-1">Aportes de clientes de reservas en el turno</p>
             </div>
 
+            {/* Entrega en Efectivo */}
+            <div>
+              <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5" htmlFor="cHanded">
+                <Wallet className="w-3.5 h-3.5 text-slate-400" /> Entrega en Efectivo *
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
+                <input
+                  id="cHanded"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  required
+                  placeholder="0"
+                  value={cashHandedAmount}
+                  onChange={(e) => setCashHandedAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full rounded-xl border border-slate-200 pl-8 pr-4 py-2.5 text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#088DCF]/20 focus:border-[#088DCF] font-semibold transition-all"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1 font-medium px-1">Dinero entregado físicamente / Gastos directos</p>
+            </div>
+
             {/* Checkbox No Consignación */}
             <div className="flex items-center gap-2 py-1.5 px-1">
               <input
@@ -592,13 +623,17 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                   <p className="text-sm font-black text-emerald-600">{formatCurrency(records.reduce((acc, r) => acc + (r.received_amount || 0), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Entregas en Efec.</p>
+                  <p className="text-sm font-black text-indigo-600">{formatCurrency(records.reduce((acc, r) => acc + (r.cash_handed_amount || 0), 0))}</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Total Consignado</p>
                   <p className="text-sm font-black text-amber-600">{formatCurrency(records.reduce((acc, r) => acc + (r.consigned_amount || 0), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Diferencia Global</p>
-                  <p className={`text-sm font-black ${records.reduce((acc, r) => acc + ((r.found_amount || 0) - (r.consigned_amount || 0)), 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {formatCurrency(records.reduce((acc, r) => acc + ((r.found_amount || 0) - (r.consigned_amount || 0)), 0))}
+                  <p className={`text-sm font-black ${records.reduce((acc, r) => acc + ((r.found_amount || 0) - (r.consigned_amount || 0) - (r.cash_handed_amount || 0)), 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {formatCurrency(records.reduce((acc, r) => acc + ((r.found_amount || 0) - (r.consigned_amount || 0) - (r.cash_handed_amount || 0)), 0))}
                   </p>
                 </div>
               </div>
@@ -609,13 +644,14 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                 {Object.entries(
                   records.reduce((acc, r) => {
                     const cleanAdv = (r.advisor || '').replace(' (SIN CONSIGNACIÓN)', '') || 'Desconocido'
-                    if (!acc[cleanAdv]) acc[cleanAdv] = { count: 0, found: 0, received: 0, consigned: 0 }
+                    if (!acc[cleanAdv]) acc[cleanAdv] = { count: 0, found: 0, received: 0, consigned: 0, handed: 0 }
                     acc[cleanAdv].count += 1
                     acc[cleanAdv].found += (r.found_amount || 0)
                     acc[cleanAdv].received += (r.received_amount || 0)
                     acc[cleanAdv].consigned += (r.consigned_amount || 0)
+                    acc[cleanAdv].handed += (r.cash_handed_amount || 0)
                     return acc
-                  }, {} as Record<string, {count: number, found: number, received: number, consigned: number}>)
+                  }, {} as Record<string, {count: number, found: number, received: number, consigned: number, handed: number}>)
                 ).map(([adv, stats]) => (
                   <div key={adv} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-1.5 hover:border-[#088DCF]/40 transition-colors">
                     <div className="flex justify-between items-center">
@@ -629,6 +665,10 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                     <div className="text-[10px] flex justify-between text-slate-500 font-medium">
                       <span>Recibido:</span>
                       <span className="font-bold text-emerald-600">{formatCurrency(stats.received)}</span>
+                    </div>
+                    <div className="text-[10px] flex justify-between text-slate-500 font-medium">
+                      <span>Ent. Efec.:</span>
+                      <span className="font-bold text-indigo-600">{formatCurrency(stats.handed)}</span>
                     </div>
                     <div className="text-[10px] flex justify-between text-slate-500 font-medium">
                       <span>Consig.:</span>
@@ -657,6 +697,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                     <th className="pb-3">Asesor</th>
                     <th className="pb-3 text-right">Cantidad Encontrada</th>
                     <th className="pb-3 text-right">Recibido Turno</th>
+                    <th className="pb-3 text-right">Entrega Efec.</th>
                     <th className="pb-3 text-right">Cantidad Consignada</th>
                     <th className="pb-3 text-right">Diferencia / Saldo</th>
                     <th className="pb-3 text-center">Acciones</th>
@@ -668,7 +709,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                     const isNoCons = safeAdvisor.includes('SIN CONSIGNACIÓN')
                     const cleanAdvisor = safeAdvisor.replace(' (SIN CONSIGNACIÓN)', '') || 'Desconocido'
                     const displayConsigned = isNoCons ? 0 : (r.consigned_amount || 0)
-                    const diff = isNoCons ? 0 : ((r.found_amount || 0) - (r.consigned_amount || 0))
+                    const diff = isNoCons ? 0 : ((r.found_amount || 0) - (r.consigned_amount || 0) - (r.cash_handed_amount || 0))
                     return (
                       <tr key={r.id || i} className="hover:bg-slate-50/50 transition-colors">
                         <td className="py-3.5 pl-1 text-slate-500 font-semibold">{r.date}</td>
@@ -684,6 +725,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                         </td>
                         <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.found_amount || 0)}</td>
                         <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.received_amount || 0)}</td>
+                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.cash_handed_amount || 0)}</td>
                         <td className="py-3.5 text-right font-bold text-slate-600">
                           {isNoCons ? (
                             <span className="text-slate-400 font-semibold italic">No consigna</span>
