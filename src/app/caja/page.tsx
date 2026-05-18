@@ -175,6 +175,9 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         proof_url: finalProofUrl,
       }
 
+      // Intenta guardar en Supabase sin incluir la columna generada 'balance'
+      const { error: sbError } = await supabase
+        .from('cash_records')
         .insert([{
           date,
           advisor: finalAdvisor,
