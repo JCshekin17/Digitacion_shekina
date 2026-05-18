@@ -41,6 +41,7 @@ export type CashRecord = {
   advisor: 'YIRLEY' | 'KEREN' | 'GABRIELA' | string
   found_amount: number
   consigned_amount: number
+  received_amount?: number
   balance: number
   proof_url?: string
 }

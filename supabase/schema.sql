@@ -66,7 +66,9 @@ CREATE TABLE IF NOT EXISTS public.cash_records (
   advisor       TEXT NOT NULL,
   found_amount  NUMERIC(12, 2) NOT NULL DEFAULT 0,
   consigned_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
-  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount) STORED
+  received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount) STORED,
+  proof_url     TEXT
 );
 
 ALTER TABLE public.cash_records ENABLE ROW LEVEL SECURITY;

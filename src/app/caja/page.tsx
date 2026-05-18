@@ -13,13 +13,14 @@ function formatCurrency(value: number) {
     currency: 'COP',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(value)
+  }).format(value || 0)
 }
 
 export default function CajaPage() {
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [date, setDate] = useState('')
   const [advisor, setAdvisor] = useState('')
   const [foundAmount, setFoundAmount] = useState<number | ''>('')
+  const [receivedAmount, setReceivedAmount] = useState<number | ''>('')
   const [consignedAmount, setConsignedAmount] = useState<number | ''>('')
   const [records, setRecords] = useState<CashRecord[]>([])
   const [loading, setLoading] = useState(false)
@@ -46,12 +47,14 @@ CREATE TABLE IF NOT EXISTS public.cash_records (
   advisor       TEXT NOT NULL,
   found_amount  NUMERIC(12, 2) NOT NULL DEFAULT 0,
   consigned_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0,
   balance       NUMERIC(12, 2) GENERATED ALWAYS AS (found_amount - consigned_amount) STORED,
   proof_url     TEXT
 );
 
 -- SI LA TABLA YA EXISTÍA, AÑADIR LA COLUMNA FALTANTE:
 ALTER TABLE public.cash_records ADD COLUMN IF NOT EXISTS proof_url TEXT;
+ALTER TABLE public.cash_records ADD COLUMN IF NOT EXISTS received_amount NUMERIC(12, 2) NOT NULL DEFAULT 0;
 
 -- 2. POLÍTICAS DE LA TABLA
 ALTER TABLE public.cash_records ENABLE ROW LEVEL SECURITY;
@@ -113,6 +116,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
   }
 
   useEffect(() => {
+    setDate(new Date().toISOString().split('T')[0])
     fetchRecords()
   }, [])
 
@@ -129,6 +133,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
 
     const finalAdvisor = noConsignment ? `${advisor} (SIN CONSIGNACIÓN)` : advisor
     const finalConsignedAmount = noConsignment ? fAmt : cAmt
+    const rAmt = Number(receivedAmount) || 0
 
     try {
       let finalProofUrl = ''
@@ -157,6 +162,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         advisor: finalAdvisor,
         found_amount: fAmt,
         consigned_amount: finalConsignedAmount,
+        received_amount: rAmt,
         balance,
         proof_url: finalProofUrl,
       }
@@ -169,6 +175,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
           advisor: finalAdvisor,
           found_amount: fAmt,
           consigned_amount: finalConsignedAmount,
+          received_amount: rAmt,
           proof_url: finalProofUrl
         }])
 
@@ -184,6 +191,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         setSuccess(true)
         setAdvisor('')
         setFoundAmount('')
+        setReceivedAmount('')
         setConsignedAmount('')
         setNoConsignment(false)
         setProofFile(null)
@@ -197,6 +205,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         advisor: finalAdvisor,
         found_amount: fAmt,
         consigned_amount: finalConsignedAmount,
+        received_amount: rAmt,
         balance,
       })
       setShowSqlHelp(true)
@@ -218,6 +227,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
     setSuccess(true)
     setAdvisor('')
     setFoundAmount('')
+    setReceivedAmount('')
     setConsignedAmount('')
     setTimeout(() => setSuccess(false), 5000)
   }
@@ -401,6 +411,28 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
               </div>
             </div>
 
+            {/* Cantidad Recibida en Turno */}
+            <div>
+              <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5" htmlFor="cReceived">
+                <DollarSign className="w-3.5 h-3.5 text-slate-400" /> Cantidad Recibida en Turno *
+              </label>
+              <div className="relative">
+                <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
+                <input
+                  id="cReceived"
+                  type="number"
+                  min="0"
+                  step="1000"
+                  required
+                  placeholder="0"
+                  value={receivedAmount}
+                  onChange={(e) => setReceivedAmount(e.target.value === '' ? '' : Number(e.target.value))}
+                  className="w-full rounded-xl border border-slate-200 pl-8 pr-4 py-2.5 text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#088DCF]/20 focus:border-[#088DCF] font-semibold transition-all"
+                />
+              </div>
+              <p className="text-[10px] text-slate-400 mt-1 font-medium px-1">Aportes de clientes de reservas en el turno</p>
+            </div>
+
             {/* Checkbox No Consignación */}
             <div className="flex items-center gap-2 py-1.5 px-1">
               <input
@@ -550,6 +582,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                     <th className="pb-3 pl-1">Fecha</th>
                     <th className="pb-3">Asesor</th>
                     <th className="pb-3 text-right">Cantidad Encontrada</th>
+                    <th className="pb-3 text-right">Recibido Turno</th>
                     <th className="pb-3 text-right">Cantidad Consignada</th>
                     <th className="pb-3 text-right">Diferencia / Saldo</th>
                     <th className="pb-3 text-center">Acciones</th>
@@ -557,10 +590,11 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-xs">
                   {records.map((r, i) => {
-                    const isNoCons = r.advisor.includes('SIN CONSIGNACIÓN')
-                    const cleanAdvisor = r.advisor.replace(' (SIN CONSIGNACIÓN)', '')
-                    const displayConsigned = isNoCons ? 0 : r.consigned_amount
-                    const diff = isNoCons ? 0 : (r.found_amount - r.consigned_amount)
+                    const safeAdvisor = r.advisor || ''
+                    const isNoCons = safeAdvisor.includes('SIN CONSIGNACIÓN')
+                    const cleanAdvisor = safeAdvisor.replace(' (SIN CONSIGNACIÓN)', '') || 'Desconocido'
+                    const displayConsigned = isNoCons ? 0 : (r.consigned_amount || 0)
+                    const diff = isNoCons ? 0 : ((r.found_amount || 0) - (r.consigned_amount || 0))
                     return (
                       <tr key={r.id || i} className="hover:bg-slate-50/50 transition-colors">
                         <td className="py-3.5 pl-1 text-slate-500 font-semibold">{r.date}</td>
@@ -574,7 +608,8 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                             )}
                           </div>
                         </td>
-                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.found_amount)}</td>
+                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.found_amount || 0)}</td>
+                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.received_amount || 0)}</td>
                         <td className="py-3.5 text-right font-bold text-slate-600">
                           {isNoCons ? (
                             <span className="text-slate-400 font-semibold italic">No consigna</span>
