@@ -108,13 +108,13 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         } else {
           throw new Error(sbError.message)
         }
+      } else if (data) {
+        setRecords((data as CashRecord[]) || [])
       } else {
-        setRecords(data || [])
-        setShowSqlHelp(false)
+        setRecords([])
       }
     } catch (err: any) {
-      setError(err.message || 'Error al obtener los registros de caja')
-      // Fallback
+      setError('Error inesperado: ' + err.message)
       const local = localStorage.getItem('shekina_cash_records')
       setRecords(local ? JSON.parse(local) : [])
     } finally {
@@ -606,7 +606,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
           </div>
 
           {/* Resumen Global */}
-          {records.length > 0 && !loading && (
+          {Array.isArray(records) && records.length > 0 && !loading && (
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 animate-fade-in shadow-inner">
               <h3 className="text-xs font-black text-[#110E3C] uppercase mb-3 flex items-center gap-1.5">
                 <Calculator className="w-4 h-4 text-[#088DCF]" /> Resumen Global Acumulado
@@ -616,24 +616,24 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Total Encontrado</p>
-                  <p className="text-sm font-black text-[#110E3C]">{formatCurrency(records.reduce((acc, r) => acc + (r.found_amount || 0), 0))}</p>
+                  <p className="text-sm font-black text-[#110E3C]">{formatCurrency(records.reduce((acc, r) => acc + (Number(r.found_amount) || 0), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Total Recibido</p>
-                  <p className="text-sm font-black text-emerald-600">{formatCurrency(records.reduce((acc, r) => acc + (r.received_amount || 0), 0))}</p>
+                  <p className="text-sm font-black text-emerald-600">{formatCurrency(records.reduce((acc, r) => acc + (Number(r.received_amount) || 0), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Entregas en Efec.</p>
-                  <p className="text-sm font-black text-indigo-600">{formatCurrency(records.reduce((acc, r) => acc + (r.cash_handed_amount || 0), 0))}</p>
+                  <p className="text-sm font-black text-indigo-600">{formatCurrency(records.reduce((acc, r) => acc + (Number(r.cash_handed_amount) || 0), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Total Consignado</p>
-                  <p className="text-sm font-black text-amber-600">{formatCurrency(records.reduce((acc, r) => acc + (r.consigned_amount || 0), 0))}</p>
+                  <p className="text-sm font-black text-amber-600">{formatCurrency(records.reduce((acc, r) => acc + (Number(r.consigned_amount) || 0), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Diferencia Global</p>
-                  <p className={`text-sm font-black ${records.reduce((acc, r) => acc + ((r.found_amount || 0) - (r.consigned_amount || 0) - (r.cash_handed_amount || 0)), 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {formatCurrency(records.reduce((acc, r) => acc + ((r.found_amount || 0) - (r.consigned_amount || 0) - (r.cash_handed_amount || 0)), 0))}
+                  <p className={`text-sm font-black ${records.reduce((acc, r) => acc + ((Number(r.found_amount) || 0) - (Number(r.consigned_amount) || 0) - (Number(r.cash_handed_amount) || 0)), 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {formatCurrency(records.reduce((acc, r) => acc + ((Number(r.found_amount) || 0) - (Number(r.consigned_amount) || 0) - (Number(r.cash_handed_amount) || 0)), 0))}
                   </p>
                 </div>
               </div>
@@ -646,10 +646,10 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                     const cleanAdv = (r.advisor || '').replace(' (SIN CONSIGNACIÓN)', '') || 'Desconocido'
                     if (!acc[cleanAdv]) acc[cleanAdv] = { count: 0, found: 0, received: 0, consigned: 0, handed: 0 }
                     acc[cleanAdv].count += 1
-                    acc[cleanAdv].found += (r.found_amount || 0)
-                    acc[cleanAdv].received += (r.received_amount || 0)
-                    acc[cleanAdv].consigned += (r.consigned_amount || 0)
-                    acc[cleanAdv].handed += (r.cash_handed_amount || 0)
+                    acc[cleanAdv].found += (Number(r.found_amount) || 0)
+                    acc[cleanAdv].received += (Number(r.received_amount) || 0)
+                    acc[cleanAdv].consigned += (Number(r.consigned_amount) || 0)
+                    acc[cleanAdv].handed += (Number(r.cash_handed_amount) || 0)
                     return acc
                   }, {} as Record<string, {count: number, found: number, received: number, consigned: number, handed: number}>)
                 ).map(([adv, stats]) => (
@@ -684,7 +684,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
 
           {loading ? (
             <div className="py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-wider">Cargando historial de caja...</div>
-          ) : records.length === 0 ? (
+          ) : (!Array.isArray(records) || records.length === 0) ? (
             <div className="py-20 text-center text-slate-400 text-xs font-medium border border-dashed border-slate-200 rounded-2xl bg-slate-50">
               No hay registros de arqueo guardados aún.
             </div>
@@ -708,8 +708,8 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                     const safeAdvisor = r.advisor || ''
                     const isNoCons = safeAdvisor.includes('SIN CONSIGNACIÓN')
                     const cleanAdvisor = safeAdvisor.replace(' (SIN CONSIGNACIÓN)', '') || 'Desconocido'
-                    const displayConsigned = isNoCons ? 0 : (r.consigned_amount || 0)
-                    const diff = isNoCons ? 0 : ((r.found_amount || 0) - (r.consigned_amount || 0) - (r.cash_handed_amount || 0))
+                    const displayConsigned = isNoCons ? 0 : (Number(r.consigned_amount) || 0)
+                    const diff = isNoCons ? 0 : ((Number(r.found_amount) || 0) - (Number(r.consigned_amount) || 0) - (Number(r.cash_handed_amount) || 0))
                     return (
                       <tr key={r.id || i} className="hover:bg-slate-50/50 transition-colors">
                         <td className="py-3.5 pl-1 text-slate-500 font-semibold">{r.date}</td>
@@ -723,9 +723,9 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                             )}
                           </div>
                         </td>
-                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.found_amount || 0)}</td>
-                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.received_amount || 0)}</td>
-                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(r.cash_handed_amount || 0)}</td>
+                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(Number(r.found_amount) || 0)}</td>
+                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(Number(r.received_amount) || 0)}</td>
+                        <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(Number(r.cash_handed_amount) || 0)}</td>
                         <td className="py-3.5 text-right font-bold text-slate-600">
                           {isNoCons ? (
                             <span className="text-slate-400 font-semibold italic">No consigna</span>
