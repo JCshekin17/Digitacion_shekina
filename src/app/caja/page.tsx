@@ -630,12 +630,12 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Total Consignado</p>
-                  <p className="text-sm font-black text-amber-600">{formatCurrency(records.reduce((acc, r) => acc + (Number(r.consigned_amount) || 0), 0))}</p>
+                  <p className="text-sm font-black text-amber-600">{formatCurrency(records.reduce((acc, r) => acc + ((r.advisor || '').includes('SIN CONSIGNACIÓN') ? 0 : (Number(r.consigned_amount) || 0)), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
                   <p className="text-[10px] font-bold text-slate-400 uppercase">Diferencia Global</p>
-                  <p className={`text-sm font-black ${records.reduce((acc, r) => acc + ((Number(r.found_amount) || 0) - (Number(r.consigned_amount) || 0) - (Number(r.cash_handed_amount) || 0)), 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
-                    {formatCurrency(records.reduce((acc, r) => acc + ((Number(r.found_amount) || 0) - (Number(r.consigned_amount) || 0) - (Number(r.cash_handed_amount) || 0)), 0))}
+                  <p className={`text-sm font-black ${records.reduce((acc, r) => acc + ((Number(r.found_amount) || 0) - ((r.advisor || '').includes('SIN CONSIGNACIÓN') ? 0 : (Number(r.consigned_amount) || 0)) - (Number(r.cash_handed_amount) || 0)), 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {formatCurrency(records.reduce((acc, r) => acc + ((Number(r.found_amount) || 0) - ((r.advisor || '').includes('SIN CONSIGNACIÓN') ? 0 : (Number(r.consigned_amount) || 0)) - (Number(r.cash_handed_amount) || 0)), 0))}
                   </p>
                 </div>
               </div>
@@ -650,7 +650,9 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                     acc[cleanAdv].count += 1
                     acc[cleanAdv].found += (Number(r.found_amount) || 0)
                     acc[cleanAdv].received += (Number(r.received_amount) || 0)
-                    acc[cleanAdv].consigned += (Number(r.consigned_amount) || 0)
+                    const isNoCons = (r.advisor || '').includes('SIN CONSIGNACIÓN')
+                    const safeConsigned = isNoCons ? 0 : (Number(r.consigned_amount) || 0)
+                    acc[cleanAdv].consigned += safeConsigned
                     acc[cleanAdv].handed += (Number(r.cash_handed_amount) || 0)
                     return acc
                   }, {} as Record<string, {count: number, found: number, received: number, consigned: number, handed: number}>)
