@@ -233,7 +233,13 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('¿Estás seguro de eliminar este registro de caja?')) return
+    const pin = prompt('Solo el administrador puede eliminar registros.\nIngrese el PIN de seguridad:')
+    if (pin !== (process.env.NEXT_PUBLIC_ADMIN_PIN || 'admin123')) {
+      if (pin !== null) alert('PIN incorrecto. Operación cancelada.')
+      return
+    }
+
+    if (!confirm('¿Estás totalmente seguro de eliminar este registro de caja?')) return
 
     setError(null)
     try {
