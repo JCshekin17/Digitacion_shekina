@@ -559,9 +559,9 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
           </form>
         </div>
 
-        {/* Historial */}
-        <div className="bg-white border border-slate-200 shadow-lg rounded-2xl p-5 sm:p-6 lg:col-span-2 overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
+        {/* Historial y Resumen */}
+        <div className="bg-white border border-slate-200 shadow-lg rounded-2xl p-5 sm:p-6 lg:col-span-2 overflow-hidden flex flex-col gap-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-sm font-bold text-[#110E3C] uppercase tracking-wider flex items-center gap-2">
               <Wallet className="w-5 h-5 text-orange-400" />
               Historial de Caja ({records.length})
@@ -573,6 +573,74 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
               <RefreshCw className="w-3.5 h-3.5" /> Actualizar Historial
             </button>
           </div>
+
+          {/* Resumen Global */}
+          {records.length > 0 && !loading && (
+            <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 animate-fade-in shadow-inner">
+              <h3 className="text-xs font-black text-[#110E3C] uppercase mb-3 flex items-center gap-1.5">
+                <Calculator className="w-4 h-4 text-[#088DCF]" /> Resumen Global Acumulado
+              </h3>
+              
+              {/* Totales Generales */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Total Encontrado</p>
+                  <p className="text-sm font-black text-[#110E3C]">{formatCurrency(records.reduce((acc, r) => acc + (r.found_amount || 0), 0))}</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Total Recibido</p>
+                  <p className="text-sm font-black text-emerald-600">{formatCurrency(records.reduce((acc, r) => acc + (r.received_amount || 0), 0))}</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Total Consignado</p>
+                  <p className="text-sm font-black text-amber-600">{formatCurrency(records.reduce((acc, r) => acc + (r.consigned_amount || 0), 0))}</p>
+                </div>
+                <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">Diferencia Global</p>
+                  <p className={`text-sm font-black ${records.reduce((acc, r) => acc + ((r.found_amount || 0) - (r.consigned_amount || 0)), 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
+                    {formatCurrency(records.reduce((acc, r) => acc + ((r.found_amount || 0) - (r.consigned_amount || 0)), 0))}
+                  </p>
+                </div>
+              </div>
+
+              {/* Distribución por Asesor */}
+              <h4 className="text-[11px] font-bold text-slate-500 uppercase mb-2">Distribución por Asesor</h4>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+                {Object.entries(
+                  records.reduce((acc, r) => {
+                    const cleanAdv = (r.advisor || '').replace(' (SIN CONSIGNACIÓN)', '') || 'Desconocido'
+                    if (!acc[cleanAdv]) acc[cleanAdv] = { count: 0, found: 0, received: 0, consigned: 0 }
+                    acc[cleanAdv].count += 1
+                    acc[cleanAdv].found += (r.found_amount || 0)
+                    acc[cleanAdv].received += (r.received_amount || 0)
+                    acc[cleanAdv].consigned += (r.consigned_amount || 0)
+                    return acc
+                  }, {} as Record<string, {count: number, found: number, received: number, consigned: number}>)
+                ).map(([adv, stats]) => (
+                  <div key={adv} className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm flex flex-col gap-1.5 hover:border-[#088DCF]/40 transition-colors">
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-black text-[#110E3C] uppercase">{adv}</span>
+                      <span className="text-[9px] font-bold text-[#088DCF] bg-[#088DCF]/10 px-1.5 py-0.5 rounded">{stats.count} registros</span>
+                    </div>
+                    <div className="text-[10px] flex justify-between text-slate-500 font-medium mt-1">
+                      <span>Caja:</span>
+                      <span className="font-bold text-slate-700">{formatCurrency(stats.found)}</span>
+                    </div>
+                    <div className="text-[10px] flex justify-between text-slate-500 font-medium">
+                      <span>Recibido:</span>
+                      <span className="font-bold text-emerald-600">{formatCurrency(stats.received)}</span>
+                    </div>
+                    <div className="text-[10px] flex justify-between text-slate-500 font-medium">
+                      <span>Consig.:</span>
+                      <span className="font-bold text-amber-600">{formatCurrency(stats.consigned)}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Tabla de registros */}
 
           {loading ? (
             <div className="py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-wider">Cargando historial de caja...</div>
