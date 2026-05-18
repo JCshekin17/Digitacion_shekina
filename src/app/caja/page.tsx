@@ -33,12 +33,11 @@ export default function CajaPage() {
   const [noConsignment, setNoConsignment] = useState(false)
   const [proofFile, setProofFile] = useState<File | null>(null)
 
-  // Calcule balance live
   const fAmt = Number(foundAmount) || 0
   const cAmt = Number(consignedAmount) || 0
   const hAmt = Number(cashHandedAmount) || 0
-  const finalConsignedAmountUI = noConsignment ? Math.max(0, fAmt - hAmt) : cAmt
-  const balance = noConsignment ? 0 : (fAmt - finalConsignedAmountUI - hAmt)
+  const finalConsignedAmountUI = noConsignment ? 0 : cAmt
+  const balance = fAmt - finalConsignedAmountUI - hAmt
 
   const sqlQuery = `-- EJECUTA ESTO EN TU SQL EDITOR DE SUPABASE PARA EL REGISTRO DE CAJA:
 
@@ -139,7 +138,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
     setSuccess(false)
 
     const finalAdvisor = noConsignment ? `${advisor} (SIN CONSIGNACIÓN)` : advisor
-    const finalConsignedAmount = noConsignment ? Math.max(0, fAmt - hAmt) : cAmt
+    const finalConsignedAmount = noConsignment ? 0 : cAmt
     const rAmt = Number(receivedAmount) || 0
 
     try {
@@ -490,7 +489,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                 className="w-4 h-4 rounded text-[#088DCF] focus:ring-[#088DCF]/20 border-slate-300"
               />
               <label htmlFor="noConsignment" className="text-xs font-bold text-slate-600 cursor-pointer select-none">
-                No se realiza consignación hoy (Saldo $0)
+                No se realiza consignación hoy (El dinero se queda en caja)
               </label>
             </div>
 
@@ -712,7 +711,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                     const isNoCons = safeAdvisor.includes('SIN CONSIGNACIÓN')
                     const cleanAdvisor = safeAdvisor.replace(' (SIN CONSIGNACIÓN)', '') || 'Desconocido'
                     const displayConsigned = isNoCons ? 0 : (Number(r.consigned_amount) || 0)
-                    const diff = isNoCons ? 0 : ((Number(r.found_amount) || 0) - (Number(r.consigned_amount) || 0) - (Number(r.cash_handed_amount) || 0))
+                    const diff = (Number(r.found_amount) || 0) - (Number(r.consigned_amount) || 0) - (Number(r.cash_handed_amount) || 0)
                     return (
                       <tr key={r.id || i} className="hover:bg-slate-50/50 transition-colors">
                         <td className="py-3.5 pl-1 text-slate-500 font-semibold">{r.date}</td>
