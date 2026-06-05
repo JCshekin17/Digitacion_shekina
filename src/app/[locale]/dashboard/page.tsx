@@ -5,11 +5,13 @@ import { useRouter } from 'next/navigation'
 import { supabase } from '@/lib/supabase'
 import Dashboard from '@/components/Dashboard'
 import { ShieldAlert, LogOut } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 
 export default function DashboardPage() {
   const [authenticated, setAuthenticated] = useState(false)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
+  const t = useTranslations('Dashboard')
 
   useEffect(() => {
     const checkUser = async () => {
@@ -47,7 +49,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#f4f6fa' }}>
         <div className="flex flex-col items-center gap-3">
           <div className="w-8 h-8 border-4 border-[#088DCF] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[#110E3C] font-bold text-xs uppercase tracking-widest">Validando Acceso...</p>
+          <p className="text-[#110E3C] font-bold text-xs uppercase tracking-widest">{t('access_validating')}</p>
         </div>
       </div>
     )
@@ -59,11 +61,11 @@ export default function DashboardPage() {
     <div className="relative">
       <button
         onClick={handleLogout}
-        aria-label="Cerrar Sesión"
+        aria-label={t('logout')}
         className="absolute top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-500 hover:text-white hover:border-red-500 transition-all uppercase tracking-widest"
       >
         <LogOut className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline">Cerrar Sesión</span>
+        <span className="hidden sm:inline">{t('logout')}</span>
       </button>
       <Dashboard />
     </div>
@@ -73,14 +75,15 @@ export default function DashboardPage() {
 // Mostrar componente de acceso denegado si no tiene sesión
 export function AccessDenied() {
   const router = useRouter()
+  const t = useTranslations('Dashboard')
   return (
     <div className="min-h-screen flex items-center justify-center" style={{ background: '#f4f6fa' }}>
       <div className="text-center">
         <ShieldAlert className="w-12 h-12 text-red-500 mx-auto mb-4" />
-        <h2 className="text-xl font-black text-[#110E3C] mb-2">Acceso Denegado</h2>
-        <p className="text-slate-500 text-sm mb-6">No tienes permisos para ver esta página.</p>
+        <h2 className="text-xl font-black text-[#110E3C] mb-2">{t('access_denied')}</h2>
+        <p className="text-slate-500 text-sm mb-6">{t('no_permissions')}</p>
         <button onClick={() => router.push('/login')} className="btn-primary">
-          Ir al Login
+          {t('go_to_login')}
         </button>
       </div>
     </div>

@@ -6,6 +6,7 @@ import { SERVICES, normalizeServiceName } from '@/lib/services'
 import CalendarView from './CalendarView'
 import { BarChart3, CircleDollarSign, CheckCircle2, Clock, ClipboardList, Hotel, User, Calendar, CalendarDays, TrendingUp, Banknote } from 'lucide-react'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 function formatCurrency(value: number) {
   return new Intl.NumberFormat('es-CO', {
@@ -96,6 +97,8 @@ export default function Dashboard() {
   const [savingEdit, setSavingEdit] = useState(false)
   const [currentMonthDate, setCurrentMonthDate] = useState(new Date())
   const [selectedDetailsRecord, setSelectedDetailsRecord] = useState<SaleRecord | null>(null)
+
+  const t = useTranslations('Dashboard')
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -360,9 +363,9 @@ export default function Dashboard() {
           <div className="h-8 w-px bg-[#088DCF]/30" />
           <div>
             <h1 className="text-base sm:text-lg font-black text-[#110E3C] tracking-tight leading-tight">
-              Panel de <span style={{color:'#088DCF'}}>Control</span>
+              {t('title')} <span style={{color:'#088DCF'}}>{t('title_highlight')}</span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-slate-400">Resúmenes Estadísticos 2.0</p>
+            <p className="text-[10px] sm:text-xs text-slate-400">{t('subtitle')}</p>
           </div>
         </div>
         <div className="h-px" style={{background:'linear-gradient(90deg, #088DCF55, #110E3C00)'}} />
@@ -372,7 +375,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4 mb-5 sm:mb-8">
         <div className="kpi-card">
           <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ventas Totales</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('kpi_total_sales')}</p>
             <CircleDollarSign className="w-5 h-5 text-slate-400" />
           </div>
           <p className="text-2xl font-black text-[#110E3C]">{formatCurrency(kpis.total_sales)}</p>
@@ -382,7 +385,7 @@ export default function Dashboard() {
         </div>
         <div className="kpi-card">
           <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Recaudado</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('kpi_deposits')}</p>
             <CheckCircle2 className="w-5 h-5 text-emerald-400" />
           </div>
           <p className="text-2xl font-black text-emerald-400">{formatCurrency(kpis.total_deposits)}</p>
@@ -395,7 +398,7 @@ export default function Dashboard() {
         </div>
         <div className="kpi-card">
           <div className="flex items-start justify-between mb-2">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Por Cobrar</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('kpi_balance')}</p>
             <Clock className="w-5 h-5 text-orange-400" />
           </div>
           <p className="text-2xl font-black text-[#088DCF]">{formatCurrency(kpis.total_balance)}</p>
@@ -411,13 +414,13 @@ export default function Dashboard() {
       {/* Tabs */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-2 scrollbar-hide">
         {[
-          { id: 'list', label: 'Lista Completa', icon: <ClipboardList className="w-4 h-4" /> },
-          { id: 'hotel', label: 'Por Hotel', icon: <Hotel className="w-4 h-4" /> },
-          { id: 'seller', label: 'Por Asesor', icon: <User className="w-4 h-4" /> },
-          { id: 'month', label: 'Por Mes', icon: <Calendar className="w-4 h-4" /> },
-          { id: 'calendar', label: 'Calendario', icon: <CalendarDays className="w-4 h-4" /> },
-          { id: 'product', label: 'Rentabilidad / Ingreso Neto', icon: <TrendingUp className="w-4 h-4" /> },
-          { id: 'cash', label: 'Caja (Efectivo)', icon: <Banknote className="w-4 h-4" /> },
+          { id: 'list', label: t('tab_list'), icon: <ClipboardList className="w-4 h-4" /> },
+          { id: 'hotel', label: t('tab_hotel'), icon: <Hotel className="w-4 h-4" /> },
+          { id: 'seller', label: t('tab_seller'), icon: <User className="w-4 h-4" /> },
+          { id: 'month', label: t('tab_month'), icon: <Calendar className="w-4 h-4" /> },
+          { id: 'calendar', label: t('tab_calendar'), icon: <CalendarDays className="w-4 h-4" /> },
+          { id: 'product', label: t('tab_product'), icon: <TrendingUp className="w-4 h-4" /> },
+          { id: 'cash', label: t('tab_cash'), icon: <Banknote className="w-4 h-4" /> },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -440,19 +443,19 @@ export default function Dashboard() {
         <div className="flex flex-col gap-3 p-4 sm:p-5 border-b border-slate-100">
           <div className="flex items-center justify-between">
             <h2 className="text-xs sm:text-sm font-bold text-[#110E3C] uppercase tracking-wide">
-              {view === 'list' ? 'Registros Detallados' : view === 'product' ? 'Tabla de Precios e Ingreso Neto' : view === 'cash' ? 'Efectivo en Caja por Hotel' : view === 'calendar' ? 'Calendario de Reservas' : `Resumen ${view === 'hotel' ? 'por Hotel' : view === 'seller' ? 'por Asesor' : 'por Mes'}`}
+              {view === 'list' ? t('view_list') : view === 'product' ? t('view_product') : view === 'cash' ? t('view_cash') : view === 'calendar' ? t('view_calendar') : view === 'hotel' ? t('view_hotel') : view === 'seller' ? t('view_seller') : t('view_month')}
             </h2>
             <button onClick={fetchData} className="btn-secondary p-2 text-xs">🔄</button>
           </div>
           <div className="flex gap-2">
             <input
               type="text"
-              placeholder="Buscar por cliente, país..."
+              placeholder={t('search_placeholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="input-corp flex-1"
             />
-            <button onClick={() => exportToCSV(filtered)} className="btn-primary text-xs px-4">📥 Exportar</button>
+            <button onClick={() => exportToCSV(filtered)} className="btn-primary text-xs px-4">📥 {t('export_csv')}</button>
           </div>
 
           {/* Filtros de Panel Inteligente */}
@@ -464,7 +467,7 @@ export default function Dashboard() {
                 onChange={(e) => setFilterHotel(e.target.value)}
                 className="input-corp w-full text-xs"
               >
-                <option value="">Todos los Hoteles</option>
+                <option value="">{t('filter_all_hotels')}</option>
                 {uniqueHotels.map(h => (
                   <option key={h} value={h}>{h}</option>
                 ))}
@@ -477,7 +480,7 @@ export default function Dashboard() {
                 onChange={(e) => setFilterSeller(e.target.value)}
                 className="input-corp w-full text-xs"
               >
-                <option value="">Todos los Asesores</option>
+                <option value="">{t('filter_all_sellers')}</option>
                 {uniqueSellers.map(s => (
                   <option key={s} value={s}>{s}</option>
                 ))}
@@ -490,7 +493,7 @@ export default function Dashboard() {
                 onChange={(e) => setFilterMonth(e.target.value)}
                 className="input-corp w-full text-xs"
               >
-                <option value="">Todos los Meses</option>
+                <option value="">{t('filter_all_months')}</option>
                 {uniqueMonths.map(m => (
                   <option key={m} value={m}>{m}</option>
                 ))}
@@ -503,7 +506,7 @@ export default function Dashboard() {
                 onChange={(e) => setFilterService(e.target.value)}
                 className="input-corp w-full text-xs"
               >
-                <option value="">Todos los Servicios</option>
+                <option value="">{t('filter_all_services')}</option>
                 {uniqueServices.map(srv => (
                   <option key={srv} value={srv}>{srv}</option>
                 ))}
@@ -522,23 +525,23 @@ export default function Dashboard() {
               onRecordClick={setSelectedDetailsRecord} 
             />
           ) : loading ? (
-            <div className="py-20 text-center text-slate-500 text-sm">Cargando datos...</div>
+            <div className="py-20 text-center text-slate-500 text-sm">{t('loading')}</div>
           ) : filtered.length === 0 ? (
-            <div className="py-20 text-center text-slate-500 text-sm">No hay datos disponibles</div>
+            <div className="py-20 text-center text-slate-500 text-sm">{t('no_data')}</div>
           ) : (
             <table className="table-corp">
               {view === 'list' ? (
                 <>
                   <thead>
                     <tr>
-                      <th onClick={() => handleSort('date')} className="cursor-pointer hover:bg-white/5 select-none">Fecha {renderSortIndicator('date')}</th>
-                      <th onClick={() => handleSort('customer')} className="cursor-pointer hover:bg-white/5 select-none">Cliente {renderSortIndicator('customer')}</th>
-                      <th onClick={() => handleSort('seller')} className="cursor-pointer hover:bg-white/5 select-none">Asesor {renderSortIndicator('seller')}</th>
-                      <th onClick={() => handleSort('hotel')} className="cursor-pointer hover:bg-white/5 select-none">Hotel {renderSortIndicator('hotel')}</th>
-                      <th onClick={() => handleSort('service')} className="cursor-pointer hover:bg-white/5 select-none">Servicio {renderSortIndicator('service')}</th>
-                      <th onClick={() => handleSort('total')} className="text-right cursor-pointer hover:bg-white/5 select-none">Total {renderSortIndicator('total')}</th>
-                      <th onClick={() => handleSort('balance')} className="text-right cursor-pointer hover:bg-white/5 select-none">Saldo {renderSortIndicator('balance')}</th>
-                      <th className="text-center select-none">Acciones</th>
+                      <th onClick={() => handleSort('date')} className="cursor-pointer hover:bg-white/5 select-none">{t('table_date')} {renderSortIndicator('date')}</th>
+                      <th onClick={() => handleSort('customer')} className="cursor-pointer hover:bg-white/5 select-none">{t('table_customer')} {renderSortIndicator('customer')}</th>
+                      <th onClick={() => handleSort('seller')} className="cursor-pointer hover:bg-white/5 select-none">{t('table_advisor')} {renderSortIndicator('seller')}</th>
+                      <th onClick={() => handleSort('hotel')} className="cursor-pointer hover:bg-white/5 select-none">{t('table_hotel')} {renderSortIndicator('hotel')}</th>
+                      <th onClick={() => handleSort('service')} className="cursor-pointer hover:bg-white/5 select-none">{t('table_service')} {renderSortIndicator('service')}</th>
+                      <th onClick={() => handleSort('total')} className="text-right cursor-pointer hover:bg-white/5 select-none">{t('table_total')} {renderSortIndicator('total')}</th>
+                      <th onClick={() => handleSort('balance')} className="text-right cursor-pointer hover:bg-white/5 select-none">{t('table_balance')} {renderSortIndicator('balance')}</th>
+                      <th className="text-center select-none">{t('table_actions')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -579,15 +582,15 @@ export default function Dashboard() {
                 <>
                   <thead>
                     <tr>
-                      <th onClick={() => handleSort('key')} className="cursor-pointer hover:bg-white/5 select-none">Producto / Servicio {renderSortIndicator('key')}</th>
-                      <th onClick={() => handleSort('pax')} className="text-center cursor-pointer hover:bg-white/5 select-none">Pax Vendidos {renderSortIndicator('pax')}</th>
-                      <th className="text-right select-none">Precio Unit.</th>
-                      <th className="text-right select-none">Costo Unit.</th>
-                      <th onClick={() => handleSort('total')} className="text-right cursor-pointer hover:bg-white/5 select-none">Ingreso Bruto {renderSortIndicator('total')}</th>
-                      <th className="text-right select-none">Costo Total</th>
-                      <th onClick={() => handleSort('margen')} className="text-right text-emerald-400 cursor-pointer hover:bg-white/5 select-none">Ingreso Neto {renderSortIndicator('margen')}</th>
-                      <th className="text-right text-orange-400 select-none">Comisiones</th>
-                      <th className="text-right text-blue-400 select-none">Utilidad Final</th>
+                      <th onClick={() => handleSort('key')} className="cursor-pointer hover:bg-white/5 select-none">{t('table_product')} {renderSortIndicator('key')}</th>
+                      <th onClick={() => handleSort('pax')} className="text-center cursor-pointer hover:bg-white/5 select-none">{t('table_pax')} {renderSortIndicator('pax')}</th>
+                      <th className="text-right select-none">{t('table_unit_price')}</th>
+                      <th className="text-right select-none">{t('table_unit_cost')}</th>
+                      <th onClick={() => handleSort('total')} className="text-right cursor-pointer hover:bg-white/5 select-none">{t('table_gross_income')} {renderSortIndicator('total')}</th>
+                      <th className="text-right select-none">{t('table_total_cost')}</th>
+                      <th onClick={() => handleSort('margen')} className="text-right text-emerald-400 cursor-pointer hover:bg-white/5 select-none">{t('table_net_income')} {renderSortIndicator('margen')}</th>
+                      <th className="text-right text-orange-400 select-none">{t('table_commissions')}</th>
+                      <th className="text-right text-blue-400 select-none">{t('table_final_profit')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -620,7 +623,7 @@ export default function Dashboard() {
                   </tbody>
                   <tfoot>
                     <tr className="bg-white/5 border-t-2 border-orange-500/30">
-                      <td className="font-black text-white text-xs py-4 uppercase">TOTALES</td>
+                      <td className="font-black text-white text-xs py-4 uppercase">{t('table_totals')}</td>
                       <td className="text-center font-bold text-white">{summaries.product.reduce((acc, [_, val]) => acc + val.pax, 0)}</td>
                       <td className="text-right"></td>
                       <td className="text-right"></td>
@@ -657,20 +660,20 @@ export default function Dashboard() {
                   <thead>
                     <tr>
                       <th onClick={() => handleSort('key')} className="cursor-pointer hover:bg-white/5 select-none">
-                        {view === 'hotel' ? 'Hotel' : view === 'seller' ? 'Asesor' : view === 'cash' ? 'Hotel (Solo Efectivo)' : 'Mes'} {renderSortIndicator('key')}
+                        {view === 'hotel' ? t('table_hotel') : view === 'seller' ? t('table_advisor') : view === 'cash' ? t('table_hotel_cash') : t('table_month')} {renderSortIndicator('key')}
                       </th>
-                      {view === 'hotel' && <th className="select-none">Productos Vendidos</th>}
-                      <th onClick={() => handleSort('count')} className="text-center cursor-pointer hover:bg-white/5 select-none">Cant. Reservas {renderSortIndicator('count')}</th>
-                      {view !== 'cash' && <th onClick={() => handleSort('total')} className="text-right cursor-pointer hover:bg-white/5 select-none">Producción Bruta {renderSortIndicator('total')}</th>}
-                      {view !== 'cash' && <th onClick={() => handleSort('cost')} className="text-right text-red-400 cursor-pointer hover:bg-white/5 select-none">Costo Total {renderSortIndicator('cost')}</th>}
-                      {view !== 'cash' && <th onClick={() => handleSort('margen')} className="text-right text-emerald-300 cursor-pointer hover:bg-white/5 select-none">Margen (Bruto−Costo) {renderSortIndicator('margen')}</th>}
-                      <th onClick={() => handleSort('deposit')} className="text-right cursor-pointer hover:bg-white/5 select-none">{view === 'cash' ? 'Efectivo en Caja (Abono)' : 'Recaudado'} {renderSortIndicator('deposit')}</th>
-                      {view !== 'cash' && <th onClick={() => handleSort('balance')} className="text-right cursor-pointer hover:bg-white/5 select-none">Por Cobrar {renderSortIndicator('balance')}</th>}
+                      {view === 'hotel' && <th className="select-none">{t('table_products_sold')}</th>}
+                      <th onClick={() => handleSort('count')} className="text-center cursor-pointer hover:bg-white/5 select-none">{t('table_booking_count')} {renderSortIndicator('count')}</th>
+                      {view !== 'cash' && <th onClick={() => handleSort('total')} className="text-right cursor-pointer hover:bg-white/5 select-none">{t('table_gross_production')} {renderSortIndicator('total')}</th>}
+                      {view !== 'cash' && <th onClick={() => handleSort('cost')} className="text-right text-red-400 cursor-pointer hover:bg-white/5 select-none">{t('table_total_cost')} {renderSortIndicator('cost')}</th>}
+                      {view !== 'cash' && <th onClick={() => handleSort('margen')} className="text-right text-emerald-300 cursor-pointer hover:bg-white/5 select-none">{t('table_margin')} {renderSortIndicator('margen')}</th>}
+                      <th onClick={() => handleSort('deposit')} className="text-right cursor-pointer hover:bg-white/5 select-none">{view === 'cash' ? t('table_cash_deposit') : t('table_collected')} {renderSortIndicator('deposit')}</th>
+                      {view !== 'cash' && <th onClick={() => handleSort('balance')} className="text-right cursor-pointer hover:bg-white/5 select-none">{t('table_receivable')} {renderSortIndicator('balance')}</th>}
                       {(view === 'hotel' || view === 'month') && (
-                        <th onClick={() => handleSort('comHotel')} className="text-right text-orange-400 cursor-pointer hover:bg-white/5 select-none">Comisión Hotel (30%) {renderSortIndicator('comHotel')}</th>
+                        <th onClick={() => handleSort('comHotel')} className="text-right text-orange-400 cursor-pointer hover:bg-white/5 select-none">{t('table_com_hotel')} {renderSortIndicator('comHotel')}</th>
                       )}
                       {(view === 'seller' || view === 'month') && (
-                        <th onClick={() => handleSort('comAsesor')} className="text-right text-yellow-400 cursor-pointer hover:bg-white/5 select-none">Comisión Asesor (15%) {renderSortIndicator('comAsesor')}</th>
+                        <th onClick={() => handleSort('comAsesor')} className="text-right text-yellow-400 cursor-pointer hover:bg-white/5 select-none">{t('table_com_advisor')} {renderSortIndicator('comAsesor')}</th>
                       )}
                     </tr>
                   </thead>
@@ -711,7 +714,7 @@ export default function Dashboard() {
                   </tbody>
                   <tfoot>
                     <tr className="bg-white/5 border-t-2 border-orange-500/30">
-                      <td className="font-black text-white text-xs py-4 uppercase">TOTALES</td>
+                      <td className="font-black text-white text-xs py-4 uppercase">{t('table_totals')}</td>
                       {view === 'hotel' && <td></td>}
                       <td className="text-center font-bold text-white">
                         {view === 'cash' ? filtered.filter(r => r.payment_method === 'Efectivo').length : filtered.length}
