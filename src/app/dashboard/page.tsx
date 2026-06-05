@@ -17,6 +17,8 @@ export default function DashboardPage() {
       const { data: { user }, error } = await supabase.auth.getUser()
       if (!user || error) {
         router.replace('/login')
+      } else if (user.email !== 'shekinatoursylogistica@outlook.com') {
+        router.replace('/caja') // Redirigir a caja si no es admin
       } else {
         setAuthenticated(true)
       }

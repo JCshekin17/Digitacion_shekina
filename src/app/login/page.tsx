@@ -35,8 +35,10 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const { error: authError } = await supabase.auth.signInWithPassword({
-      email: email.toLowerCase().trim(),
+    const loginEmail = email.includes('@') ? email.toLowerCase().trim() : `${email.toLowerCase().trim()}@shekina.com`
+
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
       password,
     })
 
@@ -53,7 +55,11 @@ export default function LoginPage() {
       setLoading(false)
     } else {
       attemptsRef.current = 0
-      router.replace('/dashboard')
+      if (loginEmail === 'shekinatoursylogistica@outlook.com') {
+        router.replace('/dashboard')
+      } else {
+        router.replace('/caja')
+      }
     }
   }
 
@@ -94,9 +100,9 @@ export default function LoginPage() {
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
                 id="login-email"
-                type="email"
+                type="text"
                 required
-                autoComplete="email"
+                autoComplete="username"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="input-corp pl-10"
