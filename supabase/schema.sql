@@ -33,17 +33,17 @@ CREATE TABLE IF NOT EXISTS public.sales_records (
 -- Habilitar Row Level Security
 ALTER TABLE public.sales_records ENABLE ROW LEVEL SECURITY;
 
--- Política: permitir lectura pública (ajustar en producción)
-CREATE POLICY "Allow public read" ON public.sales_records
-  FOR SELECT USING (true);
+-- Política: permitir lectura solo a usuarios autenticados
+CREATE POLICY "Allow authenticated read" ON public.sales_records
+  FOR SELECT USING (auth.role() = 'authenticated');
 
--- Política: permitir inserción pública (MVP — restringir con auth en producción)
-CREATE POLICY "Allow public insert" ON public.sales_records
-  FOR INSERT WITH CHECK (true);
+-- Política: permitir inserción solo a usuarios autenticados
+CREATE POLICY "Allow authenticated insert" ON public.sales_records
+  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
 
--- Política: permitir actualización pública (MVP)
-CREATE POLICY "Allow public update" ON public.sales_records
-  FOR UPDATE USING (true);
+-- Política: permitir actualización solo a usuarios autenticados
+CREATE POLICY "Allow authenticated update" ON public.sales_records
+  FOR UPDATE USING (auth.role() = 'authenticated');
 
 -- Índice para búsquedas por fecha
 CREATE INDEX IF NOT EXISTS idx_sales_records_date ON public.sales_records (date DESC);
@@ -78,7 +78,7 @@ CREATE TABLE IF NOT EXISTS public.cash_records (
 
 ALTER TABLE public.cash_records ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY "Allow public read" ON public.cash_records FOR SELECT USING (true);
-CREATE POLICY "Allow public insert" ON public.cash_records FOR INSERT WITH CHECK (true);
-CREATE POLICY "Allow public update" ON public.cash_records FOR UPDATE USING (true);
-CREATE POLICY "Allow public delete" ON public.cash_records FOR DELETE USING (true);
+CREATE POLICY "Allow authenticated read" ON public.cash_records FOR SELECT USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated insert" ON public.cash_records FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated update" ON public.cash_records FOR UPDATE USING (auth.role() = 'authenticated');
+CREATE POLICY "Allow authenticated delete" ON public.cash_records FOR DELETE USING (auth.role() = 'authenticated');
