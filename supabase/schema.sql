@@ -37,9 +37,9 @@ ALTER TABLE public.sales_records ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "Allow authenticated read" ON public.sales_records
   FOR SELECT USING (auth.role() = 'authenticated');
 
--- Política: permitir inserción solo a usuarios autenticados
-CREATE POLICY "Allow authenticated insert" ON public.sales_records
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
+-- Política: permitir inserción pública para que clientes puedan usar el formulario /ventas
+CREATE POLICY "Allow public insert" ON public.sales_records
+  FOR INSERT WITH CHECK (true);
 
 -- Política: permitir actualización solo a usuarios autenticados
 CREATE POLICY "Allow authenticated update" ON public.sales_records
