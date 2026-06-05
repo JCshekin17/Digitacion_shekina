@@ -16,16 +16,16 @@ export default function LanguageSwitcher() {
     <div className="flex space-x-2">
       <button
         onClick={() => handleLanguageChange('es')}
-        className={`px-2 py-1 rounded text-sm font-semibold transition-colors \${
-          locale === 'es' ? 'bg-[#ffb020] text-[#110E3C]' : 'bg-transparent text-white hover:bg-white/10'
+        className={`px-2 py-1 rounded text-sm font-semibold transition-colors ${
+          locale === 'es' ? 'bg-[#ffb020] text-[#110E3C]' : 'bg-transparent text-[#110E3C] hover:bg-slate-100'
         }`}
       >
         ES
       </button>
       <button
         onClick={() => handleLanguageChange('en')}
-        className={`px-2 py-1 rounded text-sm font-semibold transition-colors \${
-          locale === 'en' ? 'bg-[#ffb020] text-[#110E3C]' : 'bg-transparent text-white hover:bg-white/10'
+        className={`px-2 py-1 rounded text-sm font-semibold transition-colors ${
+          locale === 'en' ? 'bg-[#ffb020] text-[#110E3C]' : 'bg-transparent text-[#110E3C] hover:bg-slate-100'
         }`}
       >
         EN
