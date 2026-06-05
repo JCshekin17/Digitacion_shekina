@@ -42,7 +42,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 \${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${
                   pathname === link.href
                     ? 'bg-[#088DCF] text-white shadow-md shadow-[#088DCF]/25'
                     : 'text-[#110E3C] hover:bg-[#088DCF]/10 hover:text-[#088DCF]'
