@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation'
 import { supabase, type CashRecord } from '@/lib/supabase'
 import { Wallet, Calendar, User, DollarSign, Calculator, Info, Trash2, PlusCircle, CheckCircle, RefreshCw, AlertCircle, Copy, UploadCloud, FileText, X, ExternalLink, LogOut } from 'lucide-react'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 const ADVISORS = ['YIRLEY', 'KEREN', 'GABRIELA']
 
@@ -21,6 +22,8 @@ export default function CajaPage() {
   const [authenticated, setAuthenticated] = useState(false)
   const [authLoading, setAuthLoading] = useState(true)
   const router = useRouter()
+  const t = useTranslations('Caja')
+  const tCommon = useTranslations('Common')
 
   const [date, setDate] = useState('')
   const [advisor, setAdvisor] = useState('')
@@ -332,11 +335,11 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
       
       <button
         onClick={handleLogout}
-        aria-label="Cerrar Sesión"
+        aria-label={t('logout')}
         className="absolute top-4 right-4 z-50 flex items-center gap-2 px-4 py-2 bg-red-50 border border-red-200 text-red-600 text-xs font-bold rounded-lg hover:bg-red-500 hover:text-white hover:border-red-500 transition-all uppercase tracking-widest"
       >
         <LogOut className="w-3.5 h-3.5" />
-        <span className="hidden sm:inline">Cerrar Sesión</span>
+        <span className="hidden sm:inline">{t('logout')}</span>
       </button>
 
       {/* Header */}
@@ -353,9 +356,9 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
           <div className="h-8 w-px bg-[#088DCF]/30" />
           <div>
             <h1 className="text-xl sm:text-2xl font-black text-[#110E3C] tracking-tight leading-tight uppercase">
-              Registro de <span className="text-[#088DCF]">Caja</span>
+              {t('title')} <span className="text-[#088DCF]">{t('title_highlight')}</span>
             </h1>
-            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Control diario de Arqueo y Consignaciones</p>
+            <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">{t('subtitle')}</p>
           </div>
         </div>
         <div className="h-px bg-gradient-to-r from-[#088DCF]/40 to-transparent" />
@@ -366,8 +369,8 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         <div className="mb-6 p-4 rounded-xl border border-emerald-500/30 bg-emerald-50 flex items-start gap-3 animate-fade-in shadow-sm">
           <CheckCircle className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
           <div>
-            <p className="text-emerald-800 font-bold text-sm">¡Registro de caja guardado exitosamente!</p>
-            <p className="text-emerald-600 text-xs mt-0.5">El arqueo de caja se registró en el historial de manera correcta.</p>
+            <p className="text-emerald-800 font-bold text-sm">{t('success_title')}</p>
+            <p className="text-emerald-600 text-xs mt-0.5">{t('success_desc')}</p>
           </div>
         </div>
       )}
@@ -417,14 +420,14 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
         <div className="bg-white border border-slate-200 shadow-lg rounded-2xl p-5 sm:p-6 lg:col-span-1">
           <h2 className="text-sm font-bold text-[#110E3C] uppercase tracking-wider mb-5 flex items-center gap-2">
             <PlusCircle className="w-5 h-5 text-[#088DCF]" />
-            Nuevo Registro
+            {t('new_record')}
           </h2>
           
           <form onSubmit={handleSubmit} className="space-y-4">
             {/* Fecha */}
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5" htmlFor="cDate">
-                <Calendar className="w-3.5 h-3.5 text-slate-400" /> Fecha del Arqueo *
+                <Calendar className="w-3.5 h-3.5 text-slate-400" /> {t('date')} *
               </label>
               <input
                 id="cDate"
@@ -439,7 +442,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
             {/* Asesor */}
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5" htmlFor="cAdvisor">
-                <User className="w-3.5 h-3.5 text-slate-400" /> Asesor de Turno *
+                <User className="w-3.5 h-3.5 text-slate-400" /> {t('advisor')} *
               </label>
               <select
                 id="cAdvisor"
@@ -454,7 +457,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                   backgroundPosition: 'right 14px center',
                 }}
               >
-                <option value="">— Selecciona un asesor —</option>
+                <option value="">{t('select_advisor')}</option>
                 {ADVISORS.map((name) => (
                   <option key={name} value={name}>{name}</option>
                 ))}
@@ -464,7 +467,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
             {/* Cantidad Encontrada */}
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5" htmlFor="cFound">
-                <DollarSign className="w-3.5 h-3.5 text-slate-400" /> Cantidad Encontrada (Caja) *
+                <DollarSign className="w-3.5 h-3.5 text-slate-400" /> {t('found_amount')} *
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
@@ -485,7 +488,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
             {/* Cantidad Recibida en Turno */}
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5" htmlFor="cReceived">
-                <DollarSign className="w-3.5 h-3.5 text-slate-400" /> Cantidad Recibida en Turno *
+                <DollarSign className="w-3.5 h-3.5 text-slate-400" /> {t('received_amount')} *
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
@@ -501,13 +504,13 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                   className="w-full rounded-xl border border-slate-200 pl-8 pr-4 py-2.5 text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#088DCF]/20 focus:border-[#088DCF] font-semibold transition-all"
                 />
               </div>
-              <p className="text-[10px] text-slate-400 mt-1 font-medium px-1">Aportes de clientes de reservas en el turno</p>
+              <p className="text-[10px] text-slate-400 mt-1 font-medium px-1">{t('received_desc')}</p>
             </div>
 
             {/* Entrega en Efectivo */}
             <div>
               <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5" htmlFor="cHanded">
-                <Wallet className="w-3.5 h-3.5 text-slate-400" /> Entrega en Efectivo *
+                <Wallet className="w-3.5 h-3.5 text-slate-400" /> {t('cash_handed')} *
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
@@ -523,7 +526,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                   className="w-full rounded-xl border border-slate-200 pl-8 pr-4 py-2.5 text-sm bg-slate-50 focus:bg-white focus:ring-2 focus:ring-[#088DCF]/20 focus:border-[#088DCF] font-semibold transition-all"
                 />
               </div>
-              <p className="text-[10px] text-slate-400 mt-1 font-medium px-1">Dinero entregado físicamente / Gastos directos</p>
+              <p className="text-[10px] text-slate-400 mt-1 font-medium px-1">{t('cash_handed_desc')}</p>
             </div>
 
             {/* Checkbox No Consignación */}
@@ -543,14 +546,14 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                 className="w-4 h-4 rounded text-[#088DCF] focus:ring-[#088DCF]/20 border-slate-300"
               />
               <label htmlFor="noConsignment" className="text-xs font-bold text-slate-600 cursor-pointer select-none">
-                No se realiza consignación hoy (El dinero se queda en caja)
+                {t('no_consignment')}
               </label>
             </div>
 
             {/* Cantidad Consignada */}
             <div className={noConsignment ? 'opacity-50' : ''}>
               <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5" htmlFor="cConsigned">
-                <DollarSign className="w-3.5 h-3.5 text-slate-400" /> Cantidad Consignada (Banco) *
+                <DollarSign className="w-3.5 h-3.5 text-slate-400" /> {t('consigned_amount')} *
               </label>
               <div className="relative">
                 <span className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">$</span>
@@ -573,7 +576,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
             {!noConsignment && (
               <div className="animate-fade-in mt-2">
                 <label className="text-xs font-bold text-slate-500 uppercase flex items-center gap-1.5 mb-1.5">
-                  <UploadCloud className="w-3.5 h-3.5 text-slate-400" /> Comprobante de Consignación
+                  <UploadCloud className="w-3.5 h-3.5 text-slate-400" /> {t('proof')}
                 </label>
                 <div className="relative border-2 border-dashed border-slate-200 hover:border-[#088DCF]/40 bg-slate-50 hover:bg-[#088DCF]/02 rounded-2xl p-4 transition-all text-center cursor-pointer group">
                   <input
@@ -606,8 +609,8 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                   ) : (
                     <div className="py-2">
                       <UploadCloud className="w-6 h-6 text-slate-400 group-hover:text-[#088DCF] mx-auto mb-1.5 transition-colors" />
-                      <p className="text-xs font-bold text-slate-500 group-hover:text-[#088DCF] transition-colors">Seleccionar comprobante</p>
-                      <p className="text-[10px] text-slate-400 mt-0.5 font-medium">Formatos: PNG, JPG, PDF</p>
+                      <p className="text-xs font-bold text-slate-500 group-hover:text-[#088DCF] transition-colors">{t('select_proof')}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5 font-medium">{t('formats')}</p>
                     </div>
                   )}
                 </div>
@@ -617,12 +620,12 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
             {/* Live Subtraction Card (Arqueo Actual) */}
             <div className="mt-6 p-4 rounded-xl border border-slate-100 bg-slate-50/50 flex flex-col gap-2 shadow-inner">
               <div className="flex items-center justify-between text-xs font-bold text-slate-400 uppercase">
-                <span className="flex items-center gap-1"><Calculator className="w-3.5 h-3.5" /> Saldo Actual</span>
-                <span>Cálculo en vivo</span>
+                <span className="flex items-center gap-1"><Calculator className="w-3.5 h-3.5" /> {t('current_balance')}</span>
+                <span>{t('live_calc')}</span>
               </div>
               <div className="h-px bg-slate-100" />
               <div className="flex items-baseline justify-between mt-1">
-                <span className="text-xs text-slate-500 font-medium">Saldo Sobrante/Restante:</span>
+                <span className="text-xs text-slate-500 font-medium">{t('remaining_balance')}</span>
                 <span className={`text-base font-black ${balance >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                   {formatCurrency(balance)}
                 </span>
@@ -637,10 +640,10 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
             >
               {saving ? (
                 <>
-                  <RefreshCw className="w-4 h-4 animate-spin" /> Guardando...
+                  <RefreshCw className="w-4 h-4 animate-spin" /> {t('saving')}
                 </>
               ) : (
-                'Guardar Arqueo'
+                t('save_record')
               )}
             </button>
           </form>
@@ -651,13 +654,13 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 className="text-sm font-bold text-[#110E3C] uppercase tracking-wider flex items-center gap-2">
               <Wallet className="w-5 h-5 text-orange-400" />
-              Historial de Caja ({records.length})
+              {t('history')} ({records.length})
             </h2>
             <button
               onClick={fetchRecords}
               className="text-xs font-bold text-[#088DCF] hover:text-[#077db8] flex items-center gap-1 bg-[#088DCF]/08 hover:bg-[#088DCF]/15 px-3 py-1.5 rounded-lg transition-colors border border-[#088DCF]/10"
             >
-              <RefreshCw className="w-3.5 h-3.5" /> Actualizar Historial
+              <RefreshCw className="w-3.5 h-3.5" /> {t('refresh')}
             </button>
           </div>
 
@@ -665,29 +668,29 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
           {Array.isArray(records) && records.length > 0 && !loading && (
             <div className="bg-slate-50 p-4 rounded-xl border border-slate-100 animate-fade-in shadow-inner">
               <h3 className="text-xs font-black text-[#110E3C] uppercase mb-3 flex items-center gap-1.5">
-                <Calculator className="w-4 h-4 text-[#088DCF]" /> Resumen Global Acumulado
+                <Calculator className="w-4 h-4 text-[#088DCF]" /> {t('global_summary')}
               </h3>
               
               {/* Totales Generales */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Total Encontrado</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">{t('total_found')}</p>
                   <p className="text-sm font-black text-[#110E3C]">{formatCurrency(records.reduce((acc, r) => acc + (Number(r.found_amount) || 0), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Total Recibido</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">{t('total_received')}</p>
                   <p className="text-sm font-black text-emerald-600">{formatCurrency(records.reduce((acc, r) => acc + (Number(r.received_amount) || 0), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Entregas en Efec.</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">{t('total_handed')}</p>
                   <p className="text-sm font-black text-indigo-600">{formatCurrency(records.reduce((acc, r) => acc + (Number(r.cash_handed_amount) || 0), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Total Consignado</p>
-                  <p className="text-sm font-black text-amber-600">{formatCurrency(records.reduce((acc, r) => acc + ((r.advisor || '').includes('SIN CONSIGNACIÓN') ? 0 : (Number(r.consigned_amount) || 0)), 0))}</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">{t('total_consigned')}</p>
+                  <p className="text-sm font-black text-amber-600">{formatCurrency(records.reduce((acc, r) => acc + ((r.advisor || '').includes('SIN CONSIGNACIÓN') || (r.advisor || '').includes('No Consignment') ? 0 : (Number(r.consigned_amount) || 0)), 0))}</p>
                 </div>
                 <div className="bg-white p-3 rounded-lg border border-slate-200 shadow-sm">
-                  <p className="text-[10px] font-bold text-slate-400 uppercase">Diferencia Global</p>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase">{t('global_diff')}</p>
                   <p className={`text-sm font-black ${records.reduce((acc, r) => acc + ((Number(r.found_amount) || 0) - ((r.advisor || '').includes('SIN CONSIGNACIÓN') ? 0 : (Number(r.consigned_amount) || 0)) - (Number(r.cash_handed_amount) || 0)), 0) >= 0 ? 'text-emerald-600' : 'text-red-500'}`}>
                     {formatCurrency(records.reduce((acc, r) => acc + ((Number(r.found_amount) || 0) - ((r.advisor || '').includes('SIN CONSIGNACIÓN') ? 0 : (Number(r.consigned_amount) || 0)) - (Number(r.cash_handed_amount) || 0)), 0))}
                   </p>
@@ -695,7 +698,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
               </div>
 
               {/* Distribución por Asesor */}
-              <h4 className="text-[11px] font-bold text-slate-500 uppercase mb-2">Distribución por Asesor</h4>
+              <h4 className="text-[11px] font-bold text-slate-500 uppercase mb-2">{t('advisor_dist')}</h4>
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
                 {Object.entries(
                   records.reduce((acc, r) => {
@@ -741,24 +744,24 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
           {/* Tabla de registros */}
 
           {loading ? (
-            <div className="py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-wider">Cargando historial de caja...</div>
+            <div className="py-20 text-center text-slate-400 text-xs font-bold uppercase tracking-wider">{t('loading_history')}</div>
           ) : (!Array.isArray(records) || records.length === 0) ? (
             <div className="py-20 text-center text-slate-400 text-xs font-medium border border-dashed border-slate-200 rounded-2xl bg-slate-50">
-              No hay registros de arqueo guardados aún.
+              {t('no_records')}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <table className="w-full text-left border-collapse">
                 <thead>
                   <tr className="border-b border-slate-100 text-[10px] font-black text-slate-400 uppercase tracking-wider">
-                    <th className="pb-3 pl-1">Fecha</th>
-                    <th className="pb-3">Asesor</th>
-                    <th className="pb-3 text-right">Cantidad Encontrada</th>
-                    <th className="pb-3 text-right">Recibido Turno</th>
-                    <th className="pb-3 text-right">Entrega Efec.</th>
-                    <th className="pb-3 text-right">Cantidad Consignada</th>
-                    <th className="pb-3 text-right">Diferencia / Saldo</th>
-                    <th className="pb-3 text-center">Acciones</th>
+                    <th className="pb-3 pl-1">{t('table_date')}</th>
+                    <th className="pb-3">{t('table_advisor')}</th>
+                    <th className="pb-3 text-right">{t('table_found')}</th>
+                    <th className="pb-3 text-right">{t('table_received')}</th>
+                    <th className="pb-3 text-right">{t('table_handed')}</th>
+                    <th className="pb-3 text-right">{t('table_consigned')}</th>
+                    <th className="pb-3 text-right">{t('table_diff')}</th>
+                    <th className="pb-3 text-center">{t('table_actions')}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50 text-xs">
@@ -776,7 +779,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                             <span>{cleanAdvisor}</span>
                             {isNoCons && (
                               <span className="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold bg-amber-100 text-amber-800 border border-amber-200">
-                                Sin Consignación
+                                {t('no_consignment_badge')}
                               </span>
                             )}
                           </div>
@@ -786,7 +789,7 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
                         <td className="py-3.5 text-right font-bold text-slate-600">{formatCurrency(Number(r.cash_handed_amount) || 0)}</td>
                         <td className="py-3.5 text-right font-bold text-slate-600">
                           {isNoCons ? (
-                            <span className="text-slate-400 font-semibold italic">No consigna</span>
+                            <span className="text-slate-400 font-semibold italic">{t('no_consignment_text')}</span>
                           ) : (
                             `-${formatCurrency(displayConsigned)}`
                           )}
