@@ -697,12 +697,17 @@ export default function SalesForm() {
                       </button>
                     )}
                   </div>
-                  {selectedService?.description && (
+                  {selectedService?.description ? (
                     <div className="p-3 bg-white/50 rounded-lg text-[11px] text-[#110E3C]/80 whitespace-pre-wrap border border-[#088DCF]/20 leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
                       <strong className="text-[#088DCF] block mb-1">📋 Información del Servicio:</strong>
                       {selectedService.description}
                     </div>
-                  )}
+                  ) : selectedService ? (
+                    <div className="p-3 bg-white/30 rounded-lg text-[11px] text-[#110E3C]/50 italic border border-[#088DCF]/10">
+                      <strong className="text-[#088DCF]/70 block mb-1">📋 Información del Servicio:</strong>
+                      Este servicio no cuenta con una descripción detallada en el sistema.
+                    </div>
+                  ) : null}
                 </div>
               )
             })}
