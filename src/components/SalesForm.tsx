@@ -388,7 +388,6 @@ export default function SalesForm() {
           total_price: currentTotalPrice,
           discount: currentDiscount,
           deposit: currentDeposit,
-          balance: currentBalance,
           ...(payment_proof_url ? { payment_proof_url } : {})
         }
       })
