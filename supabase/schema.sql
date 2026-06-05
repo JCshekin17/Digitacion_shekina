@@ -22,8 +22,12 @@ CREATE TABLE IF NOT EXISTS public.sales_records (
   pax           INTEGER NOT NULL DEFAULT 1,
   service       TEXT,
   total_price   NUMERIC(12, 2) NOT NULL DEFAULT 0,
+  discount      NUMERIC(12, 2) NOT NULL DEFAULT 0,
   deposit       NUMERIC(12, 2) NOT NULL DEFAULT 0,
-  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (total_price - deposit) STORED
+  balance       NUMERIC(12, 2) GENERATED ALWAYS AS (total_price - deposit) STORED,
+  seller        TEXT,
+  payment_method TEXT,
+  payment_proof_url TEXT
 );
 
 -- Habilitar Row Level Security
