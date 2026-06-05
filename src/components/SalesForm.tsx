@@ -655,46 +655,57 @@ export default function SalesForm() {
           </div>
           
           <div className="space-y-3">
-            {form.services.map((svc, index) => (
-              <div key={index} className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-end bg-[#088DCF]/05 p-3 rounded-xl border border-[#088DCF]/15 relative group">
-                <div className="flex-1">
-                  <label className="label-corp text-[10px]">
-                    {t('services')} {index + 1}
-                    <span className="text-orange-400/60 normal-case font-normal ml-1">(mín. 3 letras)</span>
-                  </label>
-                  <ServiceCombobox
-                    value={svc.service}
-                    onChange={(val) => handleServiceItemChange(index, 'service', val)}
-                  />
+            {form.services.map((svc, index) => {
+              const selectedService = SERVICES.find((s) => s.name === svc.service)
+              return (
+                <div key={index} className="bg-[#088DCF]/05 p-3 rounded-xl border border-[#088DCF]/15 relative group flex flex-col gap-3">
+                  <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-end">
+                    <div className="flex-1">
+                      <label className="label-corp text-[10px]">
+                        {t('services')} {index + 1}
+                        <span className="text-orange-400/60 normal-case font-normal ml-1">(mín. 3 letras)</span>
+                      </label>
+                      <ServiceCombobox
+                        value={svc.service}
+                        onChange={(val) => handleServiceItemChange(index, 'service', val)}
+                      />
+                    </div>
+                    <div className="w-full sm:w-28">
+                      <label className="label-corp text-[10px]">{t('pax')} *</label>
+                      <input
+                        type="number" min="1" max="100" required
+                        value={svc.pax} onChange={(e) => handleServiceItemChange(index, 'pax', e.target.value === '' ? '' : parseInt(e.target.value))} className="input-corp"
+                      />
+                    </div>
+                    <div className="w-full sm:w-36">
+                      <label className="label-corp text-[10px]">{t('date')} *</label>
+                      <input
+                        type="date" required
+                        value={svc.date}
+                        onChange={(e) => handleServiceItemChange(index, 'date', e.target.value)}
+                        className="input-corp text-xs"
+                      />
+                    </div>
+                    {form.services.length > 1 && (
+                      <button 
+                        type="button" 
+                        onClick={() => removeService(index)}
+                        className="p-3 text-red-400 hover:bg-red-400/20 rounded-lg transition-colors border border-transparent hover:border-red-500/30"
+                        title="Eliminar servicio"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                  {selectedService?.description && (
+                    <div className="p-3 bg-white/50 rounded-lg text-[11px] text-[#110E3C]/80 whitespace-pre-wrap border border-[#088DCF]/20 leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
+                      <strong className="text-[#088DCF] block mb-1">📋 Información del Servicio:</strong>
+                      {selectedService.description}
+                    </div>
+                  )}
                 </div>
-                <div className="w-full sm:w-28">
-                  <label className="label-corp text-[10px]">{t('pax')} *</label>
-                  <input
-                    type="number" min="1" max="100" required
-                    value={svc.pax} onChange={(e) => handleServiceItemChange(index, 'pax', e.target.value === '' ? '' : parseInt(e.target.value))} className="input-corp"
-                  />
-                </div>
-                <div className="w-full sm:w-36">
-                  <label className="label-corp text-[10px]">{t('date')} *</label>
-                  <input
-                    type="date" required
-                    value={svc.date}
-                    onChange={(e) => handleServiceItemChange(index, 'date', e.target.value)}
-                    className="input-corp text-xs"
-                  />
-                </div>
-                {form.services.length > 1 && (
-                  <button 
-                    type="button" 
-                    onClick={() => removeService(index)}
-                    className="p-3 text-red-400 hover:bg-red-400/20 rounded-lg transition-colors border border-transparent hover:border-red-500/30"
-                    title="Eliminar servicio"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                )}
-              </div>
-            ))}
+              )
+            })}
             <button 
               type="button" 
               onClick={addService}

@@ -45,6 +45,10 @@ CREATE POLICY "Allow public insert" ON public.sales_records
 CREATE POLICY "Allow authenticated update" ON public.sales_records
   FOR UPDATE USING (auth.role() = 'authenticated');
 
+-- Política: permitir eliminación solo a usuarios autenticados
+CREATE POLICY "Allow authenticated delete" ON public.sales_records
+  FOR DELETE USING (auth.role() = 'authenticated');
+
 -- Índice para búsquedas por fecha
 CREATE INDEX IF NOT EXISTS idx_sales_records_date ON public.sales_records (date DESC);
 
