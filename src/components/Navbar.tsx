@@ -98,6 +98,9 @@ export default function Navbar() {
               </Link>
             ))}
           </div>
+          <div className="px-4 py-3 border-t border-[#088DCF]/15 flex justify-end">
+            <LanguageSwitcher />
+          </div>
         </div>
       )}
     </nav>
