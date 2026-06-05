@@ -2,7 +2,8 @@
 
 import { useState, useRef } from 'react'
 import { supabase } from '@/lib/supabase'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/routing'
+import { useTranslations } from 'next-intl'
 import Image from 'next/image'
 import { Eye, EyeOff, Lock, Mail, AlertCircle, ShieldCheck } from 'lucide-react'
 
@@ -17,6 +18,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const t = useTranslations('Login')
 
   const attemptsRef = useRef(0)
   const lockedUntilRef = useRef<number>(0)
@@ -28,7 +30,7 @@ export default function LoginPage() {
     const now = Date.now()
     if (lockedUntilRef.current > now) {
       const secsLeft = Math.ceil((lockedUntilRef.current - now) / 1000)
-      setError(`Demasiados intentos fallidos. Intenta de nuevo en ${secsLeft} segundos.`)
+      setError(t('too_many_attempts', { secsLeft }))
       return
     }
 
@@ -47,10 +49,10 @@ export default function LoginPage() {
       if (attemptsRef.current >= MAX_ATTEMPTS) {
         lockedUntilRef.current = Date.now() + LOCKOUT_MS
         attemptsRef.current = 0
-        setError(`Cuenta bloqueada temporalmente por seguridad. Espera 60 segundos.`)
+        setError(t('account_locked'))
       } else {
         const remaining = MAX_ATTEMPTS - attemptsRef.current
-        setError(`Credenciales incorrectas. Te quedan ${remaining} intentos.`)
+        setError(t('invalid_credentials', { remaining }))
       }
       setLoading(false)
     } else {
@@ -80,10 +82,10 @@ export default function LoginPage() {
           <div className="flex items-center justify-center gap-2 mb-1">
             <ShieldCheck className="w-5 h-5 text-[#088DCF]" />
             <h1 className="text-xl font-black text-[#110E3C] tracking-tight">
-              Acceso <span style={{ color: '#088DCF' }}>Privado</span>
+              {t('title_private')} <span style={{ color: '#088DCF' }}>{t('title_highlight')}</span>
             </h1>
           </div>
-          <p className="text-slate-500 text-sm">Panel Administrativo — Shekina Tours y Logística</p>
+          <p className="text-slate-500 text-sm">{t('subtitle')}</p>
         </div>
 
         {error && (
@@ -95,7 +97,7 @@ export default function LoginPage() {
 
         <form onSubmit={handleLogin} className="space-y-5">
           <div>
-            <label className="label-corp" htmlFor="login-email">Correo Electrónico</label>
+            <label className="label-corp" htmlFor="login-email">{t('email_label')}</label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -112,7 +114,7 @@ export default function LoginPage() {
           </div>
 
           <div>
-            <label className="label-corp" htmlFor="login-password">Contraseña</label>
+            <label className="label-corp" htmlFor="login-password">{t('password_label')}</label>
             <div className="relative">
               <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
@@ -129,8 +131,8 @@ export default function LoginPage() {
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
                 className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#088DCF] focus:outline-none transition-colors"
-                title={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
-                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+                title={showPassword ? t('hide_password') : t('show_password')}
+                aria-label={showPassword ? t('hide_password') : t('show_password')}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
@@ -143,14 +145,14 @@ export default function LoginPage() {
             className="btn-primary w-full py-3"
           >
             {loading
-              ? (<><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> Validando...</>)
-              : 'Entrar al Panel'
+              ? (<><svg className="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg> {t('validating')}</>)
+              : t('enter_button')
             }
           </button>
         </form>
 
         <p className="text-center text-slate-400 text-[10px] mt-8 uppercase tracking-[0.15em]">
-          Protección de Datos — Shekina Tours y Logística
+          {t('data_protection')}
         </p>
       </div>
     </div>

@@ -1,0 +1,32 @@
+{
+  "Navigation": {
+    "login": "Iniciar Sesión",
+    "ventas": "Ingreso de Ventas",
+    "ventas_short": "Ventas",
+    "caja": "Registro de Caja",
+    "caja_short": "Caja",
+    "dashboard": "Panel de Control",
+    "dashboard_short": "Dashboard"
+  },
+  "Common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "save": "Guardar",
+    "cancel": "Cancelar"
+  },
+  "Login": {
+    "title_private": "Acceso",
+    "title_highlight": "Privado",
+    "subtitle": "Panel Administrativo — Shekina Tours y Logística",
+    "too_many_attempts": "Demasiados intentos fallidos. Intenta de nuevo en {secsLeft} segundos.",
+    "account_locked": "Cuenta bloqueada temporalmente por seguridad. Espera 60 segundos.",
+    "invalid_credentials": "Credenciales incorrectas. Te quedan {remaining} intentos.",
+    "email_label": "Usuario o Correo Electrónico",
+    "password_label": "Contraseña",
+    "validating": "Validando...",
+    "enter_button": "Entrar al Panel",
+    "data_protection": "Protección de Datos — Shekina Tours y Logística",
+    "hide_password": "Ocultar contraseña",
+    "show_password": "Mostrar contraseña"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "Navigation": {
+    "login": "Login",
+    "ventas": "Sales Entry",
+    "ventas_short": "Sales",
+    "caja": "Cash Register",
+    "caja_short": "Cash",
+    "dashboard": "Control Panel",
+    "dashboard_short": "Dashboard"
+  },
+  "Common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "Login": {
+    "title_private": "Private",
+    "title_highlight": "Access",
+    "subtitle": "Admin Panel — Shekina Tours y Logística",
+    "too_many_attempts": "Too many failed attempts. Try again in {secsLeft} seconds.",
+    "account_locked": "Account temporarily locked for security. Wait 60 seconds.",
+    "invalid_credentials": "Invalid credentials. You have {remaining} attempts left.",
+    "email_label": "Username or Email",
+    "password_label": "Password",
+    "validating": "Validating...",
+    "enter_button": "Enter Panel",
+    "data_protection": "Data Protection — Shekina Tours y Logística",
+    "hide_password": "Hide password",
+    "show_password": "Show password"
+  }
+}

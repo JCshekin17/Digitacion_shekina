@@ -1,19 +1,22 @@
 'use client'
 
 import { useState } from 'react'
-import Link from 'next/link'
-import { usePathname } from 'next/navigation'
+import { Link, usePathname } from '@/i18n/routing'
 import Image from 'next/image'
 import { LayoutDashboard, PenSquare, Menu, X, Wallet } from 'lucide-react'
+import LanguageSwitcher from './LanguageSwitcher'
+import { useTranslations } from 'next-intl'
 
 export default function Navbar() {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
 
+  const t = useTranslations('Navigation');
+
   const navLinks = [
-    { href: '/ventas',    label: 'Ingreso de Ventas', shortLabel: 'Ventas',    icon: <PenSquare className="w-4 h-4" /> },
-    { href: '/caja',      label: 'Registro de Caja',   shortLabel: 'Caja',      icon: <Wallet className="w-4 h-4" /> },
-    { href: '/dashboard', label: 'Panel de Control',  shortLabel: 'Dashboard', icon: <LayoutDashboard className="w-4 h-4" /> },
+    { href: '/ventas',    label: t('ventas'), shortLabel: t('ventas_short'),    icon: <PenSquare className="w-4 h-4" /> },
+    { href: '/caja',      label: t('caja'),   shortLabel: t('caja_short'),      icon: <Wallet className="w-4 h-4" /> },
+    { href: '/dashboard', label: t('dashboard'),  shortLabel: t('dashboard_short'), icon: <LayoutDashboard className="w-4 h-4" /> },
   ]
 
   return (
@@ -39,7 +42,7 @@ export default function Navbar() {
               <Link
                 key={link.href}
                 href={link.href}
-                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 ${
+                className={`flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all duration-200 \${
                   pathname === link.href
                     ? 'bg-[#088DCF] text-white shadow-md shadow-[#088DCF]/25'
                     : 'text-[#110E3C] hover:bg-[#088DCF]/10 hover:text-[#088DCF]'
@@ -50,6 +53,10 @@ export default function Navbar() {
                 <span className="md:hidden">{link.shortLabel}</span>
               </Link>
             ))}
+            
+            <div className="ml-4 pl-4 border-l border-[#088DCF]/20 flex items-center">
+              <LanguageSwitcher />
+            </div>
           </div>
 
           {/* Mobile hamburger */}
