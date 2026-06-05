@@ -224,6 +224,128 @@ function CountryCombobox({ value, onChange }: CountryComboboxProps) {
   )
 }
 
+// ── Combobox de servicio con autocompletado ──────────────────────
+interface ServiceComboboxProps {
+  value: string
+  onChange: (service: string) => void
+}
+
+function ServiceCombobox({ value, onChange }: ServiceComboboxProps) {
+  const [query, setQuery] = useState(value)
+  const [open, setOpen] = useState(false)
+  const [highlighted, setHighlighted] = useState(0)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const listRef = useRef<HTMLUListElement>(null)
+
+  const filtered =
+    query.length >= 3
+      ? SERVICES.filter((s) =>
+          s.name.toLowerCase().includes(query.toLowerCase())
+        ).slice(0, 12)
+      : []
+
+  // Sync query cuando el valor externo cambia (ej. reset)
+  useEffect(() => {
+    setQuery(value)
+  }, [value])
+
+  // Cerrar al hacer click fuera
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false)
+        // Si lo que queda en query no es un servicio válido, limpia
+        const exact = SERVICES.find((s) => s.name.toLowerCase() === query.toLowerCase())
+        if (!exact) {
+          setQuery('')
+          onChange('')
+        }
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [query, onChange])
+
+  function select(name: string) {
+    setQuery(name)
+    onChange(name)
+    setOpen(false)
+  }
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    if (!open || filtered.length === 0) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlighted((h) => Math.min(h + 1, filtered.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlighted((h) => Math.max(h - 1, 0))
+    } else if (e.key === 'Enter') {
+      e.preventDefault()
+      select(filtered[highlighted].name)
+    } else if (e.key === 'Escape') {
+      setOpen(false)
+    }
+  }
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          autoComplete="off"
+          placeholder="Escribe 3 letras..."
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setHighlighted(0)
+            setOpen(true)
+          }}
+          onFocus={() => query.length >= 3 && setOpen(true)}
+          onKeyDown={handleKeyDown}
+          className="input-corp pr-8"
+        />
+        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 text-xs pointer-events-none">
+          🔍
+        </span>
+      </div>
+
+      {open && filtered.length > 0 && (
+        <ul
+          ref={listRef}
+          className="absolute z-50 w-full mt-1 rounded-xl border border-[rgba(37,99,168,0.4)] overflow-hidden shadow-2xl"
+          style={{ background: '#0d1f38', maxHeight: '220px', overflowY: 'auto' }}
+        >
+          {filtered.map((s, i) => (
+            <li
+              key={s.name}
+              onMouseDown={() => select(s.name)}
+              className="px-4 py-2.5 text-sm cursor-pointer transition-colors"
+              style={{
+                background: i === highlighted ? 'rgba(249,115,22,0.15)' : 'transparent',
+                color: i === highlighted ? '#fb923c' : '#cbd5e1',
+                borderBottom: '1px solid rgba(30,58,95,0.3)',
+              }}
+              onMouseEnter={() => setHighlighted(i)}
+            >
+              {s.name}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {open && query.length >= 3 && filtered.length === 0 && (
+        <div
+          className="absolute z-50 w-full mt-1 rounded-xl border border-[rgba(37,99,168,0.3)] px-4 py-3 text-sm text-slate-500"
+          style={{ background: '#0d1f38' }}
+        >
+          Sin resultados para &ldquo;{query}&rdquo;
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ── Componente principal ─────────────────────────────────────
 export default function SalesForm() {
   const [form, setForm] = useState(INITIAL_FORM)
@@ -533,26 +655,14 @@ export default function SalesForm() {
             {form.services.map((svc, index) => (
               <div key={index} className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-end bg-[#088DCF]/05 p-3 rounded-xl border border-[#088DCF]/15 relative group">
                 <div className="flex-1">
-                  <label className="label-corp text-[10px]">Servicio / Destino {index + 1}</label>
-                  <select
+                  <label className="label-corp text-[10px]">
+                    Servicio / Destino {index + 1}
+                    <span className="text-orange-400/60 normal-case font-normal ml-1">(mín. 3 letras)</span>
+                  </label>
+                  <ServiceCombobox
                     value={svc.service}
-                    onChange={(e) => handleServiceItemChange(index, 'service', e.target.value)}
-                    className="input-corp"
-                    required
-                    style={{
-                      appearance: 'none',
-                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
-                      backgroundRepeat: 'no-repeat',
-                      backgroundPosition: 'right 12px center',
-                    }}
-                  >
-                    <option value="">— Selecciona un servicio —</option>
-                    {SERVICES.map((s) => (
-                      <option key={s.name} value={s.name}>
-                        {s.name}
-                      </option>
-                    ))}
-                  </select>
+                    onChange={(val) => handleServiceItemChange(index, 'service', val)}
+                  />
                 </div>
                 <div className="w-full sm:w-28">
                   <label className="label-corp text-[10px]">Pax *</label>
