@@ -347,7 +347,10 @@ function ServiceCombobox({ value, onChange }: ServiceComboboxProps) {
 }
 
 // ── Componente principal ─────────────────────────────────────
+import { useTranslations } from 'next-intl'
+
 export default function SalesForm() {
+  const t = useTranslations('SalesForm')
   const [form, setForm] = useState(INITIAL_FORM)
   const [balance, setBalance] = useState(0)
   const [loading, setLoading] = useState(false)
@@ -568,9 +571,9 @@ export default function SalesForm() {
           <div className="h-8 w-px bg-[#088DCF]/30" />
           <div>
             <h1 className="text-base sm:text-lg font-black text-[#110E3C] tracking-tight leading-tight">
-              Ingreso de <span style={{color:'#088DCF'}}>Ventas</span>
+              {t('title')} <span style={{color:'#088DCF'}}>{t('title_highlight')}</span>
             </h1>
-            <p className="text-[10px] sm:text-xs text-slate-400">Motor de Reservas 2.0</p>
+            <p className="text-[10px] sm:text-xs text-slate-400">{t('subtitle')}</p>
           </div>
         </div>
         <div className="h-px" style={{background:'linear-gradient(90deg, #088DCF55, #110E3C00)'}} />
@@ -581,8 +584,8 @@ export default function SalesForm() {
         <div className="mb-6 p-4 rounded-xl border border-emerald-500/30 bg-emerald-500/10 flex items-start gap-3 animate-fade-in">
           <CheckCircle2 className="w-6 h-6 text-emerald-400 shrink-0" />
           <div>
-            <p className="text-emerald-400 font-bold text-sm">¡Reserva registrada exitosamente!</p>
-            <p className="text-emerald-300/70 text-xs mt-1">El resumen fue enviado por WhatsApp.</p>
+            <p className="text-emerald-400 font-bold text-sm">{t('success_title')}</p>
+            <p className="text-emerald-300/70 text-xs mt-1">{t('success_desc')}</p>
           </div>
         </div>
       )}
@@ -590,7 +593,7 @@ export default function SalesForm() {
         <div className="mb-6 p-4 rounded-xl border border-red-500/30 bg-red-500/10 flex items-start gap-3 animate-fade-in">
           <XCircle className="w-6 h-6 text-red-400 shrink-0" />
           <div>
-            <p className="text-red-400 font-bold text-sm">Error al guardar</p>
+            <p className="text-red-400 font-bold text-sm">{t('error_title')}</p>
             <p className="text-red-300/70 text-xs mt-1">{error}</p>
           </div>
         </div>
@@ -602,13 +605,13 @@ export default function SalesForm() {
         <div className="glass-card p-4 sm:p-6">
           <h2 className="text-xs font-bold text-[#088DCF] uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="inline-block w-5 h-px bg-[#088DCF]" />
-            Información General
+            {t('reservation_details')}
             <span className="inline-block flex-1 h-px bg-[#088DCF]/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             <div className="space-y-3">
               <div>
-                <label className="label-corp" htmlFor="seller">Asesor de Venta *</label>
+                <label className="label-corp" htmlFor="seller">{t('seller')} *</label>
                 <select
                   id="seller" name="seller" required
                   value={form.seller} onChange={handleChange}
@@ -629,7 +632,7 @@ export default function SalesForm() {
 
               {form.seller === 'OTRO' && (
                 <div className="animate-fade-in">
-                  <label className="label-corp" htmlFor="custom_seller">Nombre del Asesor Personalizado *</label>
+                  <label className="label-corp" htmlFor="custom_seller">{t('other_seller')} *</label>
                   <input
                     id="custom_seller"
                     type="text"
@@ -643,7 +646,7 @@ export default function SalesForm() {
               )}
             </div>
             <div>
-              <label className="label-corp" htmlFor="date">Fecha de Reserva *</label>
+              <label className="label-corp" htmlFor="date">{t('date')} *</label>
               <input
                 id="date" name="date" type="date" required
                 value={form.date} onChange={handleChange} className="input-corp"
@@ -656,7 +659,7 @@ export default function SalesForm() {
               <div key={index} className="flex flex-col sm:flex-row gap-3 sm:gap-4 items-stretch sm:items-end bg-[#088DCF]/05 p-3 rounded-xl border border-[#088DCF]/15 relative group">
                 <div className="flex-1">
                   <label className="label-corp text-[10px]">
-                    Servicio / Destino {index + 1}
+                    {t('services')} {index + 1}
                     <span className="text-orange-400/60 normal-case font-normal ml-1">(mín. 3 letras)</span>
                   </label>
                   <ServiceCombobox
@@ -665,14 +668,14 @@ export default function SalesForm() {
                   />
                 </div>
                 <div className="w-full sm:w-28">
-                  <label className="label-corp text-[10px]">Pax *</label>
+                  <label className="label-corp text-[10px]">{t('pax')} *</label>
                   <input
                     type="number" min="1" max="100" required
                     value={svc.pax} onChange={(e) => handleServiceItemChange(index, 'pax', e.target.value === '' ? '' : parseInt(e.target.value))} className="input-corp"
                   />
                 </div>
                 <div className="w-full sm:w-36">
-                  <label className="label-corp text-[10px]">Fecha Servicio *</label>
+                  <label className="label-corp text-[10px]">{t('date')} *</label>
                   <input
                     type="date" required
                     value={svc.date}
@@ -697,7 +700,7 @@ export default function SalesForm() {
               onClick={addService}
               className="text-xs font-bold text-blue-400 hover:text-blue-300 flex items-center gap-1 bg-blue-500/10 hover:bg-blue-500/20 px-4 py-2 rounded-lg transition-colors border border-blue-500/20"
             >
-              <Plus className="w-4 h-4" /> Agregar otro servicio
+              <Plus className="w-4 h-4" /> {t('add_service')}
             </button>
           </div>
         </div>
@@ -706,12 +709,12 @@ export default function SalesForm() {
         <div className="glass-card p-4 sm:p-6">
           <h2 className="text-xs font-bold text-[#088DCF] uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="inline-block w-5 h-px bg-[#088DCF]" />
-            Datos del Cliente
+            {t('customer_data')}
             <span className="inline-block flex-1 h-px bg-[#088DCF]/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="sm:col-span-2 lg:col-span-1">
-              <label className="label-corp" htmlFor="customer_name">Nombre Completo *</label>
+              <label className="label-corp" htmlFor="customer_name">{t('customer_name')} *</label>
               <input
                 id="customer_name" name="customer_name" type="text" required
                 placeholder="Nombre del cliente"
@@ -719,7 +722,7 @@ export default function SalesForm() {
               />
             </div>
             <div>
-              <label className="label-corp" htmlFor="passport_id">Pasaporte / Cédula</label>
+              <label className="label-corp" htmlFor="passport_id">{t('passport')}</label>
               <input
                 id="passport_id" name="passport_id" type="text"
                 placeholder="Número de documento"
@@ -727,7 +730,7 @@ export default function SalesForm() {
               />
             </div>
             <div>
-              <label className="label-corp" htmlFor="phone">Teléfono / WhatsApp</label>
+              <label className="label-corp" htmlFor="phone">{t('phone')}</label>
               <input
                 id="phone" name="phone" type="tel"
                 placeholder="+57 300 000 0000"
@@ -739,7 +742,7 @@ export default function SalesForm() {
               )}
             </div>
             <div>
-              <label className="label-corp" htmlFor="email">Correo Electrónico</label>
+              <label className="label-corp" htmlFor="email">{t('email')}</label>
               <input
                 id="email" name="email" type="email"
                 placeholder="cliente@email.com"
@@ -754,7 +757,7 @@ export default function SalesForm() {
             {/* País — combobox con autocompletado */}
             <div>
               <label className="label-corp" htmlFor="country">
-                País de Origen
+                {t('country')}
                 <span className="text-orange-400/60 normal-case font-normal ml-1">(mín. 3 letras)</span>
               </label>
               <CountryCombobox value={form.country} onChange={handleCountryChange} />
@@ -762,7 +765,7 @@ export default function SalesForm() {
 
             {/* Ciudad — select dinámico según país */}
             <div>
-              <label className="label-corp" htmlFor="city">Ciudad</label>
+              <label className="label-corp" htmlFor="city">{t('city')}</label>
               {availableCities.length > 0 ? (
                 <select
                   id="city" name="city"
@@ -770,7 +773,7 @@ export default function SalesForm() {
                   className="input-corp"
                   style={{ appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
                 >
-                  <option value="">Selecciona una ciudad</option>
+                  <option value="">{t('select_city')}</option>
                   {availableCities.map((city) => (
                     <option key={city} value={city}>{city}</option>
                   ))}
@@ -792,7 +795,7 @@ export default function SalesForm() {
         <div className="glass-card p-4 sm:p-6">
           <h2 className="text-xs font-bold text-[#088DCF] uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="inline-block w-5 h-px bg-[#088DCF]" />
-            Alojamiento
+            {t('hotel')}
             <span className="inline-block flex-1 h-px bg-[#088DCF]/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -800,7 +803,7 @@ export default function SalesForm() {
             {/* Hotel — dropdown con hoteles predefinidos */}
             <div className="space-y-3">
               <div>
-                <label className="label-corp" htmlFor="hotel">Hotel</label>
+                <label className="label-corp" htmlFor="hotel">{t('hotel')}</label>
                 <select
                   id="hotel" name="hotel"
                   value={form.hotel} onChange={handleChange}
@@ -821,7 +824,7 @@ export default function SalesForm() {
 
               {form.hotel === 'OTRO' && (
                 <div className="animate-fade-in">
-                  <label className="label-corp" htmlFor="custom_hotel">Nombre del Hotel Personalizado *</label>
+                  <label className="label-corp" htmlFor="custom_hotel">{t('other_hotel')} *</label>
                   <input
                     id="custom_hotel"
                     type="text"
@@ -836,7 +839,7 @@ export default function SalesForm() {
             </div>
 
             <div>
-              <label className="label-corp" htmlFor="room">Número de Habitación</label>
+              <label className="label-corp" htmlFor="room">{t('room')}</label>
               <input
                 id="room" name="room" type="text"
                 placeholder="Ej: 101, Suite 202"
@@ -850,12 +853,12 @@ export default function SalesForm() {
         <div className="glass-card p-4 sm:p-6">
           <h2 className="text-xs font-bold text-[#088DCF] uppercase tracking-widest mb-5 flex items-center gap-2">
             <span className="inline-block w-5 h-px bg-[#088DCF]" />
-            Información Financiera
+            {t('financial')}
             <span className="inline-block flex-1 h-px bg-[#088DCF]/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
-              <label className="label-corp" htmlFor="base_price">Valor del Producto (COP) *</label>
+              <label className="label-corp" htmlFor="base_price">{t('total_price')} *</label>
               <input
                 id="base_price" name="base_price" type="number"
                 min="0" step="1000" required placeholder="0"
@@ -863,7 +866,7 @@ export default function SalesForm() {
               />
             </div>
             <div>
-              <label className="label-corp" htmlFor="discount">Descuento (COP)</label>
+              <label className="label-corp" htmlFor="discount">{t('discount')} (COP)</label>
               <input
                 id="discount" name="discount" type="number"
                 min="0" step="1000" placeholder="0"
@@ -871,7 +874,7 @@ export default function SalesForm() {
               />
             </div>
             <div>
-              <label className="label-corp" htmlFor="total_price">Precio Total (COP) *</label>
+              <label className="label-corp" htmlFor="total_price">{t('base_price')} (COP) *</label>
               <input
                 id="total_price" name="total_price" type="number"
                 min="0" step="1000" required placeholder="0"
@@ -879,7 +882,7 @@ export default function SalesForm() {
               />
             </div>
             <div>
-              <label className="label-corp" htmlFor="deposit">Abono / Depósito (COP) *</label>
+              <label className="label-corp" htmlFor="deposit">{t('deposit')} (COP) *</label>
               <input
                 id="deposit" name="deposit" type="number"
                 min="0" step="1000" required placeholder="0"
@@ -888,7 +891,7 @@ export default function SalesForm() {
             </div>
             <div>
               <label className="label-corp" htmlFor="balance_display">
-                Saldo Pendiente{' '}
+                {t('balance')}{' '}
                 <span className="text-[#088DCF]/60 normal-case font-normal">(autocalculado)</span>
               </label>
               <input
@@ -899,7 +902,7 @@ export default function SalesForm() {
             
             {/* Método de Pago y Comprobante */}
             <div className="lg:col-span-2">
-              <label className="label-corp" htmlFor="payment_method">Método de Pago</label>
+              <label className="label-corp" htmlFor="payment_method">{t('payment_method')}</label>
               <select
                 id="payment_method" name="payment_method"
                 value={form.payment_method || 'Efectivo'} onChange={handleChange}
@@ -926,7 +929,7 @@ export default function SalesForm() {
               )}
             </div>
             <div>
-              <label className="label-corp" htmlFor="payment_proof">Cargar Comprobante (Foto/Imagen)</label>
+              <label className="label-corp" htmlFor="payment_proof">{t('payment_proof')}</label>
               <div className="flex items-center gap-3">
                 <input
                   id="payment_proof" name="payment_proof" type="file" accept="image/*"
@@ -999,7 +1002,7 @@ export default function SalesForm() {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
-                  Guardando...
+                  {t('validating')}
                 </>
               ) : (
                 <>💾 Guardar Reserva</>
