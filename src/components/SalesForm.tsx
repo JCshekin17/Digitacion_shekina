@@ -18,6 +18,17 @@ const HOTELS = [
   'OTRO',
 ]
 
+// ── Asesores disponibles ─────────────────────────────────────
+const SELLERS = [
+  'GABRIELA SERRANO',
+  'JOHAN CASTRO',
+  'KEREN CASTRO',
+  'WILLIAM CASTRO',
+  'YIRLEY MARTINEZ',
+  'YUDY FONTALVO',
+  'OTRO',
+]
+
 // ── Estado inicial del formulario ────────────────────────────
 type FormState = Omit<SaleRecord, 'id' | 'created_at' | 'balance' | 'payment_proof_url' | 'service' | 'pax'> & { 
   base_price: number;
@@ -222,6 +233,7 @@ export default function SalesForm() {
   const [error, setError] = useState<string | null>(null)
   const [availableCities, setAvailableCities] = useState<string[]>([])
   const [customHotel, setCustomHotel] = useState('')
+  const [customSeller, setCustomSeller] = useState('')
   const [proofFile, setProofFile] = useState<File | null>(null)
 
   // Autocalcular balance y recargo
@@ -331,6 +343,7 @@ export default function SalesForm() {
     setSuccess(false)
     try {
       const finalHotel = form.hotel === 'OTRO' ? customHotel : form.hotel
+      const finalSeller = form.seller === 'OTRO' ? customSeller.toUpperCase() : form.seller
       const { base_price, discount, services, ...restForm } = form
 
       let payment_proof_url = ''
@@ -381,6 +394,7 @@ export default function SalesForm() {
 
         return {
           ...restForm,
+          seller: finalSeller,
           date: s.date,
           hotel: finalHotel,
           service: s.service,
@@ -399,12 +413,13 @@ export default function SalesForm() {
       if (supabaseError) throw new Error(supabaseError.message)
 
       // Usar form completo para el mensaje (resumen total)
-      const message = buildWhatsAppMessage({ ...form, hotel: finalHotel, balance, surcharge })
+      const message = buildWhatsAppMessage({ ...form, hotel: finalHotel, seller: finalSeller, balance, surcharge })
       window.location.assign(`https://wa.me/573222309034?text=${message}`)
 
       setSuccess(true)
       setForm({ ...INITIAL_FORM, date: new Date().toISOString().split('T')[0] })
       setCustomHotel('')
+      setCustomSeller('')
       setBalance(0)
       setProofFile(null)
       setTimeout(() => setSuccess(false), 5000)
@@ -469,13 +484,41 @@ export default function SalesForm() {
             <span className="inline-block flex-1 h-px bg-[#088DCF]/20" />
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            <div>
-              <label className="label-corp" htmlFor="seller">Asesor de Venta *</label>
-              <input
-                id="seller" name="seller" type="text" required
-                placeholder="NOMBRE DEL ASESOR"
-                value={form.seller} onChange={handleChange} className="input-corp font-bold"
-              />
+            <div className="space-y-3">
+              <div>
+                <label className="label-corp" htmlFor="seller">Asesor de Venta *</label>
+                <select
+                  id="seller" name="seller" required
+                  value={form.seller} onChange={handleChange}
+                  className="input-corp"
+                  style={{
+                    appearance: 'none',
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+                    backgroundRepeat: 'no-repeat',
+                    backgroundPosition: 'right 12px center',
+                  }}
+                >
+                  <option value="">— Selecciona un asesor —</option>
+                  {SELLERS.map((s) => (
+                    <option key={s} value={s}>{s}</option>
+                  ))}
+                </select>
+              </div>
+
+              {form.seller === 'OTRO' && (
+                <div className="animate-fade-in">
+                  <label className="label-corp" htmlFor="custom_seller">Nombre del Asesor Personalizado *</label>
+                  <input
+                    id="custom_seller"
+                    type="text"
+                    required
+                    placeholder="NOMBRE DEL ASESOR"
+                    value={customSeller}
+                    onChange={(e) => setCustomSeller(e.target.value.toUpperCase())}
+                    className="input-corp border-orange-500/50"
+                  />
+                </div>
+              )}
             </div>
             <div>
               <label className="label-corp" htmlFor="date">Fecha de Reserva *</label>
