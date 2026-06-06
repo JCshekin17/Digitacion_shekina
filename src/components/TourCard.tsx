@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, Info, ImageOff } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Info, ImageOff, X } from 'lucide-react'
 import { ServiceItem } from '@/lib/services'
 
 interface TourCardProps {
@@ -12,12 +12,15 @@ interface TourCardProps {
 
 export default function TourCard({ service, images }: TourCardProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
+  const [isModalOpen, setIsModalOpen] = useState(false)
 
-  const handleNext = () => {
+  const handleNext = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
     setCurrentIndex((prev) => (prev === images.length - 1 ? 0 : prev + 1))
   }
 
-  const handlePrev = () => {
+  const handlePrev = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
     setCurrentIndex((prev) => (prev === 0 ? images.length - 1 : prev - 1))
   }
 
@@ -32,8 +35,9 @@ export default function TourCard({ service, images }: TourCardProps) {
         {images.length > 0 ? (
           <>
             <div 
-              className="flex h-full transition-transform duration-500 ease-out"
+              className="flex h-full transition-transform duration-500 ease-out cursor-pointer"
               style={{ transform: `translateX(-${currentIndex * 100}%)` }}
+              onClick={() => setIsModalOpen(true)}
             >
               {images.map((img, i) => (
                 <div key={i} className="min-w-full h-full relative">
@@ -118,6 +122,53 @@ export default function TourCard({ service, images }: TourCardProps) {
           )}
         </div>
       </div>
+
+      {/* Lightbox Modal para ampliar imagen */}
+      {isModalOpen && images.length > 0 && (
+        <div className="fixed inset-0 z-[100] bg-black/90 flex flex-col items-center justify-center p-4">
+          <button 
+            className="absolute top-6 right-6 text-white/80 hover:text-white bg-black/50 hover:bg-black/80 rounded-full p-2 transition-all z-10"
+            onClick={() => setIsModalOpen(false)}
+            aria-label="Cerrar"
+          >
+            <X className="w-8 h-8" />
+          </button>
+
+          <div className="relative w-full max-w-5xl h-[80vh] flex items-center justify-center">
+            <Image
+              src={images[currentIndex]}
+              alt={`${service.name} - Foto Ampliada`}
+              fill
+              className="object-contain"
+              sizes="100vw"
+              priority
+            />
+          </div>
+
+          {images.length > 1 && (
+            <>
+              <button
+                onClick={(e) => handlePrev(e)}
+                className="absolute left-4 sm:left-10 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-all"
+                aria-label="Foto anterior"
+              >
+                <ChevronLeft className="w-8 h-8" />
+              </button>
+              <button
+                onClick={(e) => handleNext(e)}
+                className="absolute right-4 sm:right-10 top-1/2 -translate-y-1/2 bg-white/10 hover:bg-white/20 text-white p-3 rounded-full backdrop-blur-md transition-all"
+                aria-label="Siguiente foto"
+              >
+                <ChevronRight className="w-8 h-8" />
+              </button>
+            </>
+          )}
+
+          <div className="absolute bottom-6 text-white/80 font-medium text-sm">
+            {currentIndex + 1} de {images.length}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
