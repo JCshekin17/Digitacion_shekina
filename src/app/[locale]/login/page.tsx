@@ -60,12 +60,14 @@ export default function LoginPage() {
       } else {
         attemptsRef.current = 0
         
-        // Forzamos al enrutador de Next.js a actualizar la vista y hacer push
-        router.refresh()
+        // Esperamos un instante para garantizar que Supabase guarde la cookie internamente
+        await new Promise(resolve => setTimeout(resolve, 800))
+
+        // Determinar la redirección y forzar recarga completa para asegurar envío de cookies
         if (loginEmail === 'shekinatoursylogistica@outlook.com') {
-          router.push('/dashboard')
+          window.location.href = '/es/dashboard'
         } else {
-          router.push('/caja')
+          window.location.href = '/es/caja'
         }
       }
     } catch (err: any) {
