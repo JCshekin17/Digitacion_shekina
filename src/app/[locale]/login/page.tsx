@@ -39,31 +39,37 @@ export default function LoginPage() {
 
     const loginEmail = email.includes('@') ? email.toLowerCase().trim() : `${email.toLowerCase().trim()}@shekina.com`
 
-    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-      email: loginEmail,
-      password,
-    })
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: loginEmail,
+        password,
+      })
 
-    if (authError) {
-      attemptsRef.current++
-      if (attemptsRef.current >= MAX_ATTEMPTS) {
-        lockedUntilRef.current = Date.now() + LOCKOUT_MS
+      if (authError) {
+        attemptsRef.current++
+        if (attemptsRef.current >= MAX_ATTEMPTS) {
+          lockedUntilRef.current = Date.now() + LOCKOUT_MS
+          attemptsRef.current = 0
+          setError(t('account_locked') || 'Demasiados intentos. Cuenta bloqueada por 1 minuto.')
+        } else {
+          const remaining = MAX_ATTEMPTS - attemptsRef.current
+          setError((t('invalid_credentials', { remaining })) || `Credenciales inválidas. Intentos restantes: ${remaining}`)
+        }
+        setLoading(false)
+      } else {
         attemptsRef.current = 0
-        setError(t('account_locked'))
-      } else {
-        const remaining = MAX_ATTEMPTS - attemptsRef.current
-        setError(t('invalid_credentials', { remaining }))
+        
+        // Determinar la redirección y forzar recarga completa para asegurar envío de cookies
+        if (loginEmail === 'shekinatoursylogistica@outlook.com') {
+          window.location.href = '/es/dashboard'
+        } else {
+          window.location.href = '/es/caja'
+        }
       }
+    } catch (err: any) {
+      console.error("Login Exception:", err)
+      setError(err?.message || "Error inesperado al conectar con el servidor.")
       setLoading(false)
-    } else {
-      attemptsRef.current = 0
-      
-      // Determinar la redirección y forzar recarga completa para asegurar envío de cookies
-      if (loginEmail === 'shekinatoursylogistica@outlook.com') {
-        window.location.href = '/es/dashboard'
-      } else {
-        window.location.href = '/es/caja'
-      }
     }
   }
 
