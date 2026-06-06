@@ -1,5 +1,5 @@
 import { SERVICES, getTourImages } from '@/lib/services'
-import { getSupabaseCatalogImages } from '@/lib/catalogStorage'
+import { getSupabaseCatalogImages, getGlobalCatalogSettings } from '@/lib/catalogStorage'
 import CatalogGrid from '@/components/CatalogGrid'
 import { getTranslations } from 'next-intl/server'
 
@@ -24,6 +24,9 @@ export default async function CatalogPage() {
     return a.name.localeCompare(b.name);
   })
 
+  // Fetch global settings
+  const settings = await getGlobalCatalogSettings()
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
       <div className="mb-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -37,7 +40,7 @@ export default async function CatalogPage() {
         </div>
       </div>
 
-      <CatalogGrid services={servicesWithImages} />
+      <CatalogGrid services={servicesWithImages} initialHideWithoutPhotos={settings.hideWithoutPhotos} />
     </div>
   )
 }

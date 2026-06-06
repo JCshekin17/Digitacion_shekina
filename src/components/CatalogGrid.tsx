@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { supabase } from '@/lib/supabase'
+import { setGlobalCatalogSettings } from '@/lib/catalogStorage'
 import TourCard from '@/components/TourCard'
 import { ServiceItem } from '@/lib/services'
 import Link from 'next/link'
@@ -12,11 +13,13 @@ interface ServiceWithImages extends ServiceItem {
 
 interface CatalogGridProps {
   services: ServiceWithImages[]
+  initialHideWithoutPhotos?: boolean
 }
 
-export default function CatalogGrid({ services }: CatalogGridProps) {
-  const [hideWithoutPhotos, setHideWithoutPhotos] = useState(false)
+export default function CatalogGrid({ services, initialHideWithoutPhotos = false }: CatalogGridProps) {
+  const [hideWithoutPhotos, setHideWithoutPhotos] = useState(initialHideWithoutPhotos)
   const [isAdmin, setIsAdmin] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
 
   useEffect(() => {
     const checkUser = async () => {
@@ -46,14 +49,21 @@ export default function CatalogGrid({ services }: CatalogGridProps) {
           >
             Administrar Fotos
           </Link>
-          <label className="flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors text-sm font-medium text-slate-700">
+          <label className={`flex items-center gap-2 cursor-pointer bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm hover:bg-slate-50 transition-colors text-sm font-medium ${isSaving ? 'opacity-50 text-slate-400' : 'text-slate-700'}`}>
             <input
               type="checkbox"
+              disabled={isSaving}
               checked={hideWithoutPhotos}
-              onChange={(e) => setHideWithoutPhotos(e.target.checked)}
-              className="rounded text-[#088DCF] focus:ring-[#088DCF] w-4 h-4"
+              onChange={async (e) => {
+                const newVal = e.target.checked;
+                setHideWithoutPhotos(newVal);
+                setIsSaving(true);
+                await setGlobalCatalogSettings({ hideWithoutPhotos: newVal });
+                setIsSaving(false);
+              }}
+              className="rounded text-[#088DCF] focus:ring-[#088DCF] w-4 h-4 disabled:opacity-50"
             />
-            Ocultar servicios sin fotos
+            {isSaving ? 'Guardando...' : 'Ocultar servicios sin fotos'}
           </label>
         </div>
       )}

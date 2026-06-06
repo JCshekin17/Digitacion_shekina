@@ -25,3 +25,30 @@ export async function getSupabaseCatalogImages(serviceName: string): Promise<str
     return []
   }
 }
+
+export interface CatalogSettings {
+  hideWithoutPhotos: boolean;
+}
+
+export async function getGlobalCatalogSettings(): Promise<CatalogSettings> {
+  try {
+    const { data, error } = await supabase.storage.from('tours-catalog').download('settings.json')
+    if (error || !data) return { hideWithoutPhotos: false }
+    const text = await data.text()
+    return JSON.parse(text)
+  } catch {
+    return { hideWithoutPhotos: false }
+  }
+}
+
+export async function setGlobalCatalogSettings(settings: CatalogSettings): Promise<boolean> {
+  try {
+    const blob = new Blob([JSON.stringify(settings)], { type: 'application/json' })
+    const { error } = await supabase.storage.from('tours-catalog').upload('settings.json', blob, {
+      upsert: true
+    })
+    return !error
+  } catch {
+    return false
+  }
+}
