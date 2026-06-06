@@ -244,12 +244,9 @@ function ServiceCombobox({ value, onChange }: ServiceComboboxProps) {
   const wrapperRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLUListElement>(null)
 
-  const filtered =
-    query.length >= 3
-      ? SERVICES.filter((s) =>
-          s.name.toLowerCase().includes(query.toLowerCase())
-        ).slice(0, 12)
-      : []
+  const filtered = SERVICES.filter((s) =>
+    s.name.toLowerCase().includes(query.toLowerCase())
+  )
 
   // Sync query cuando el valor externo cambia (ej. reset)
   useEffect(() => {
@@ -301,14 +298,14 @@ function ServiceCombobox({ value, onChange }: ServiceComboboxProps) {
         <input
           type="text"
           autoComplete="off"
-          placeholder="Escribe 3 letras..."
+          placeholder="Selecciona o busca un servicio..."
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)
             setHighlighted(0)
             setOpen(true)
           }}
-          onFocus={() => query.length >= 3 && setOpen(true)}
+          onFocus={() => setOpen(true)}
           onKeyDown={handleKeyDown}
           className="input-corp pr-8"
         />
@@ -341,7 +338,7 @@ function ServiceCombobox({ value, onChange }: ServiceComboboxProps) {
         </ul>
       )}
 
-      {open && query.length >= 3 && filtered.length === 0 && (
+      {open && query.length > 0 && filtered.length === 0 && (
         <div
           className="absolute z-50 w-full mt-1 rounded-xl border border-[rgba(37,99,168,0.3)] px-4 py-3 text-sm text-slate-500"
           style={{ background: '#0d1f38' }}
@@ -727,7 +724,6 @@ export default function SalesForm() {
                     <div className="flex-1">
                       <label className="label-corp text-[10px]">
                         {t('services')} {index + 1}
-                        <span className="text-orange-400/60 normal-case font-normal ml-1">(mín. 3 letras)</span>
                       </label>
                       <ServiceCombobox
                         value={svc.service}
