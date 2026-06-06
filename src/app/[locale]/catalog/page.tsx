@@ -1,6 +1,6 @@
 import { SERVICES, getTourImages } from '@/lib/services'
 import { getSupabaseCatalogImages } from '@/lib/catalogStorage'
-import TourCard from '@/components/TourCard'
+import CatalogGrid from '@/components/CatalogGrid'
 import { getTranslations } from 'next-intl/server'
 
 export default async function CatalogPage() {
@@ -45,17 +45,7 @@ export default async function CatalogPage() {
         </a>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-        {servicesWithImages.map((service, idx) => (
-          <TourCard key={idx} service={service} images={service.images} />
-        ))}
-      </div>
-      
-      {servicesWithImages.length === 0 && (
-        <div className="text-center py-20 text-slate-400">
-          No hay servicios disponibles en el catálogo en este momento.
-        </div>
-      )}
+      <CatalogGrid services={servicesWithImages} />
     </div>
   )
 }
