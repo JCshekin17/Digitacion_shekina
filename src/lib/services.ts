@@ -33,12 +33,27 @@ export function getTourImages(serviceName: string): string[] {
     'volcan del totumo': 'TOURS VOLCAN DEL TOTUMO',
     'tour punta arena - isla tierra bomba': 'PUNTA ARENA',
     'palmarito beach vip': 'PALMARITO VIP',
-    'tour bahia en bote': 'BOTE RUMBERO'
+    'tour bahia en bote': 'BOTE RUMBERO',
+    'top 3 islas - bora bora | pao pao | islabela': 'NO_EXISTE_PARA_EVITAR_DUPLICADOS'
   };
 
-  const folderName = mapping[normService] || Object.keys(catalogImages).find(
-    k => normalizeServiceName(k) === normService || normService.includes(normalizeServiceName(k))
-  );
+  let folderName = mapping[normService];
+
+  if (!folderName) {
+    // 1. Prioritize exact match
+    folderName = Object.keys(catalogImages).find(
+      k => normalizeServiceName(k) === normService
+    );
+  }
+
+  if (!folderName) {
+    // 2. If no exact match, try substring match but sort by longest key first
+    // to prevent 'BORA BORA' from intercepting 'TOP 3 BORA BORA' if it existed in the name
+    const sortedKeys = Object.keys(catalogImages).sort((a, b) => b.length - a.length);
+    folderName = sortedKeys.find(
+      k => normService.includes(normalizeServiceName(k))
+    );
+  }
 
   if (folderName && (catalogImages as Record<string, string[]>)[folderName]) {
     const paths = (catalogImages as Record<string, string[]>)[folderName];
