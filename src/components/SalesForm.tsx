@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { supabase, type SaleRecord } from '@/lib/supabase'
 import { COUNTRIES, getCitiesByCountry } from '@/lib/countries'
-import { SERVICES } from '@/lib/services'
+import { SERVICES, normalizeServiceName } from '@/lib/services'
 import { PenSquare, CheckCircle2, XCircle, Trash2, Info, AlertTriangle, Plus } from 'lucide-react'
 import Image from 'next/image'
 
@@ -64,7 +64,14 @@ function formatCurrency(value: number) {
 }
 
 function buildWhatsAppMessage(data: FormState & { balance: number; surcharge: number }) {
-  const servicesList = data.services.map(s => `• ${s.pax}x ${s.service || 'N/A'} (${s.date})`).join('\n')
+  const servicesList = data.services.map(s => {
+    let serviceText = `• ${s.pax}x ${s.service || 'N/A'} (${s.date})`;
+    const serviceDetails = SERVICES.find(sv => normalizeServiceName(sv.name) === normalizeServiceName(s.service || ''));
+    if (serviceDetails && serviceDetails.description) {
+      serviceText += `\n\n📝 *Detalles del Servicio:*\n${serviceDetails.description}\n`;
+    }
+    return serviceText;
+  }).join('\n\n----------------------------\n\n')
 
   const lines = [
     `*Nueva Reserva - Shekina 2.0* 🌴`,
