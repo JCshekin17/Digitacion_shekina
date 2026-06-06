@@ -30,7 +30,14 @@ export default async function middleware(request: NextRequest) {
 
   const {
     data: { user },
+    error,
   } = await supabase.auth.getUser()
+
+  console.log('[Middleware] Path:', request.nextUrl.pathname)
+  console.log('[Middleware] Has user:', !!user, 'Error:', error?.message)
+  if (user) {
+    console.log('[Middleware] User email:', user.email)
+  }
 
   const path = request.nextUrl.pathname
   const localePrefix = path.match(/^\/(en|es)/)?.[0] || ''

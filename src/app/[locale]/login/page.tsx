@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { loginAction } from '@/app/actions/auth'
 import { useRouter } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
@@ -19,7 +19,6 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const t = useTranslations('Login')
-  const supabase = createClient()
 
   const attemptsRef = useRef(0)
   const lockedUntilRef = useRef<number>(0)
@@ -41,12 +40,13 @@ export default function LoginPage() {
     const loginEmail = email.includes('@') ? email.toLowerCase().trim() : `${email.toLowerCase().trim()}@shekina.com`
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-        email: loginEmail,
-        password,
-      })
+      const formData = new FormData()
+      formData.append('email', email)
+      formData.append('password', password)
 
-      if (authError) {
+      const result = await loginAction(formData)
+
+      if (result.error) {
         attemptsRef.current++
         if (attemptsRef.current >= MAX_ATTEMPTS) {
           lockedUntilRef.current = Date.now() + LOCKOUT_MS
@@ -57,13 +57,10 @@ export default function LoginPage() {
           setError((t('invalid_credentials', { remaining })) || `Credenciales inválidas. Intentos restantes: ${remaining}`)
         }
         setLoading(false)
-      } else {
+      } else if (result.success) {
         attemptsRef.current = 0
         
-        // Esperamos un instante para garantizar que Supabase guarde la cookie internamente
-        await new Promise(resolve => setTimeout(resolve, 800))
-
-        // Determinar la redirección y forzar recarga completa para asegurar envío de cookies
+        // Redireccionamos a través del enrutador o window.location
         if (loginEmail === 'shekinatoursylogistica@outlook.com') {
           window.location.href = '/es/dashboard'
         } else {
