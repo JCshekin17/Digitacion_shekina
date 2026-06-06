@@ -57,10 +57,12 @@ export default function LoginPage() {
       setLoading(false)
     } else {
       attemptsRef.current = 0
+      
+      // Determinar la redirección y forzar recarga completa para asegurar envío de cookies
       if (loginEmail === 'shekinatoursylogistica@outlook.com') {
-        router.replace('/dashboard')
+        window.location.href = '/es/dashboard'
       } else {
-        router.replace('/caja')
+        window.location.href = '/es/caja'
       }
     }
   }
