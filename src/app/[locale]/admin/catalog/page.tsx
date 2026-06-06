@@ -9,27 +9,12 @@ import { UploadCloud, Image as ImageIcon, CheckCircle2, ShieldAlert } from 'luci
 
 export default function AdminCatalogPage() {
   const router = useRouter()
-  const [session, setSession] = useState<any>(null)
-  const [loadingAuth, setLoadingAuth] = useState(true)
+  const [session, setSession] = useState<any>(true)
 
   const [selectedService, setSelectedService] = useState('')
   const [files, setFiles] = useState<File[]>([])
   const [uploading, setUploading] = useState(false)
   const [message, setMessage] = useState('')
-
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) {
-        router.replace('/login')
-      } else {
-        setSession(data.session)
-      }
-      setLoadingAuth(false)
-    })
-  }, [router])
-
-  if (loadingAuth) return <div className="p-8 text-center text-slate-500">Validando acceso...</div>
-  if (!session) return null
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
