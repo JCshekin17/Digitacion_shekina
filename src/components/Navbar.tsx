@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Link, usePathname } from '@/i18n/routing'
 import Image from 'next/image'
-import { LayoutDashboard, PenSquare, Menu, X, Wallet } from 'lucide-react'
+import { LayoutDashboard, PenSquare, Menu, X, Wallet, ImageIcon } from 'lucide-react'
 import LanguageSwitcher from './LanguageSwitcher'
 import { useTranslations } from 'next-intl'
 
@@ -15,6 +15,7 @@ export default function Navbar() {
 
   const navLinks = [
     { href: '/ventas',    label: t('ventas'), shortLabel: t('ventas_short'),    icon: <PenSquare className="w-4 h-4" /> },
+    { href: '/catalog',   label: t('catalog') || 'Catálogo', shortLabel: t('catalog_short') || 'Catálogo', icon: <ImageIcon className="w-4 h-4" /> },
     { href: '/caja',      label: t('caja'),   shortLabel: t('caja_short'),      icon: <Wallet className="w-4 h-4" /> },
     { href: '/dashboard', label: t('dashboard'),  shortLabel: t('dashboard_short'), icon: <LayoutDashboard className="w-4 h-4" /> },
   ]
@@ -92,7 +93,7 @@ export default function Navbar() {
                 <div>
                   <p className="font-bold">{link.label}</p>
                   <p className="text-xs text-slate-500 font-normal">
-                    {link.href === '/ventas' ? 'Registrar nueva reserva' : link.href === '/caja' ? 'Control y arqueo de caja' : 'KPIs y reportes CSV'}
+                    {link.href === '/ventas' ? 'Registrar nueva reserva' : link.href === '/catalog' ? 'Catálogo de Tours' : link.href === '/caja' ? 'Control y arqueo de caja' : 'KPIs y reportes CSV'}
                   </p>
                 </div>
               </Link>

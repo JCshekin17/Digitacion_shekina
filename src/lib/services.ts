@@ -15,6 +15,39 @@ export function normalizeServiceName(s: string): string {
     .replace(/\s+/g, ' ')            // colapsa espacios múltiples
 }
 
+import catalogImages from './catalogImages.json';
+
+export function getTourImages(serviceName: string): string[] {
+  const normService = normalizeServiceName(serviceName);
+  
+  // Custom mappings for tricky names
+  const mapping: Record<string, string> = {
+    'day pass catamaran bona vida islas del rosario': 'BONA VIDA',
+    'city tours barranquilla/santa marta': 'CITY TOURS BARRANQUILLASANTA MARTA',
+    'islas del rosario full adventure': 'FULL ADVENTURE',
+    'noche blanca bequia': 'NOCHE BLANCA',
+    'playa tranquila pack x 4 adventure': 'PACK PLAYA TRANQUILA X 4',
+    'sunset catamaran flamante': 'SUNSET CATAMARÁN FLAMANTE',
+    'tours bahia + club de playa kabana': 'TOURS BAHIA + KABANA',
+    'tours bahia bequia eagle': 'TOURS BAHIA BEQUIA',
+    'volcan del totumo': 'TOURS VOLCAN DEL TOTUMO',
+    'tour punta arena - isla tierra bomba': 'PUNTA ARENA',
+    'palmarito beach vip': 'PALMARITO VIP',
+    'tour bahia en bote': 'BOTE RUMBERO'
+  };
+
+  const folderName = mapping[normService] || Object.keys(catalogImages).find(
+    k => normalizeServiceName(k) === normService || normService.includes(normalizeServiceName(k))
+  );
+
+  if (folderName && (catalogImages as Record<string, string[]>)[folderName]) {
+    const paths = (catalogImages as Record<string, string[]>)[folderName];
+    return Array.from(new Set(paths)).map(p => `/catalog/${p}`);
+  }
+
+  return [];
+}
+
 export const SERVICES: ServiceItem[] = [
   { name: '4 ISLAS MARITIMO', price: 220000, cost: 150000, description: `¡Descubre el encanto del Archipiélago de Nuestra Señora del Rosario con nuestro tour marítimo por 4 islas! 🌊☀️\nIdeal para quienes desean un tour dinámico lleno de mar, sol y mucha diversión.\n\n✨ Incluye:\n🚤 Transporte: Recorrido en lancha rápida deportiva.\n🏝️ Tour Panorámico: Visita a 4 de las islas más representativas del archipiélago.\n🍽️ Almuerzo Típico: Delicioso plato caribeño frente al mar.\n🤿 Snorkeling: Tiempo dedicado para explorar los arrecifes de coral.\n👨‍✈️ Guía: Acompañamiento durante el recorrido.\n\n📌 Observaciones Importantes:\n• Impuesto portuario no incluido.\n\n⏰ Horario:\n8:00 a.m. – 3:00 p.m.` },
   { name: '5 DESTINOS TERRESTRE', price: 250000, cost: 180000, description: `¡Conoce lo mejor de la región en un solo día con nuestro Tour 5 Destinos Terrestre! 🚌🌴\nExplora 5 hermosos destinos turísticos por vía terrestre en un cómodo bus climatizado. Un recorrido completo para llevarte los mejores recuerdos.\n\n✨ Incluye:\n🚐 Transporte: Bus climatizado ida y regreso.\n🏖️ Recorrido: Visita guiada por 5 hermosos destinos.\n🍽️ Almuerzo Típico: Deliciosa comida local.\n👨‍✈️ Guía Bilingüe: Acompañamiento profesional durante el tour.\n\n📌 Observaciones Importantes:\n• Entradas a atracciones específicas pueden no estar incluidas.\n\n⏰ Horario:\n7:00 a.m. – 5:00 p.m.` },

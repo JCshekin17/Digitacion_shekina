@@ -6,7 +6,9 @@
     "caja": "Registro de Caja",
     "caja_short": "Caja",
     "dashboard": "Panel de Control",
-    "dashboard_short": "Dashboard"
+    "dashboard_short": "Dashboard",
+    "catalog": "Catálogo de Tours",
+    "catalog_short": "Catálogo"
   },
   "Common": {
     "loading": "Cargando...",

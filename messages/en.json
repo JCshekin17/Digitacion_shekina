@@ -6,7 +6,7 @@
     "caja": "Cash Register",
     "caja_short": "Cash",
     "dashboard": "Control Panel",
-    "dashboard_short": "Dashboard"
+    "dashboard_short": "Dashboard", "catalog": "Tour Catalog", "catalog_short": "Catalog"
   },
   "Common": {
     "loading": "Loading...",
