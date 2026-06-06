@@ -41,14 +41,19 @@ export async function getGlobalCatalogSettings(): Promise<CatalogSettings> {
   }
 }
 
-export async function setGlobalCatalogSettings(settings: CatalogSettings): Promise<boolean> {
+export async function setGlobalCatalogSettings(settings: CatalogSettings): Promise<{success: boolean, error?: string}> {
   try {
     const blob = new Blob([JSON.stringify(settings)], { type: 'application/json' })
     const { error } = await supabase.storage.from('tours-catalog').upload('settings.json', blob, {
       upsert: true
     })
-    return !error
-  } catch {
-    return false
+    if (error) {
+      console.error("Upload error:", error)
+      return { success: false, error: error.message }
+    }
+    return { success: true }
+  } catch (err: any) {
+    console.error("Upload exception:", err)
+    return { success: false, error: err.message || "Unknown error" }
   }
 }

@@ -58,11 +58,11 @@ export default function CatalogGrid({ services, initialHideWithoutPhotos = false
                 const newVal = e.target.checked;
                 setHideWithoutPhotos(newVal);
                 setIsSaving(true);
-                const success = await setGlobalCatalogSettings({ hideWithoutPhotos: newVal });
+                const result = await setGlobalCatalogSettings({ hideWithoutPhotos: newVal });
                 setIsSaving(false);
-                if (!success) {
+                if (!result.success) {
                   setHideWithoutPhotos(!newVal);
-                  alert("Error al guardar: Supabase bloqueó la acción. Por favor, asegúrate de ejecutar el código SQL de políticas de seguridad en Supabase que te indicó el asistente.");
+                  alert("Error al guardar: " + result.error + "\n\nAsegúrate de haber ejecutado el SQL en Supabase o revisa el nombre del bucket.");
                 }
               }}
               className="rounded text-[#088DCF] focus:ring-[#088DCF] w-4 h-4 disabled:opacity-50"
