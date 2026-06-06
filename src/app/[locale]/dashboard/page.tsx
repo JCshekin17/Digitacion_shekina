@@ -8,54 +8,16 @@ import { ShieldAlert, LogOut } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 
 export default function DashboardPage() {
-  const [authenticated, setAuthenticated] = useState(false)
-  const [loading, setLoading] = useState(true)
+  const [authenticated, setAuthenticated] = useState(true) // assume true if middleware lets us through
   const router = useRouter()
   const t = useTranslations('Dashboard')
-
-  useEffect(() => {
-    const checkUser = async () => {
-      // ✅ Usar getUser() en lugar de getSession() — valida JWT en el servidor
-      const { data: { user }, error } = await supabase.auth.getUser()
-      if (!user || error) {
-        router.replace('/login')
-      } else if (user.email !== 'shekinatoursylogistica@outlook.com') {
-        router.replace('/caja') // Redirigir a caja si no es admin
-      } else {
-        setAuthenticated(true)
-      }
-      setLoading(false)
-    }
-
-    checkUser()
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        setAuthenticated(false)
-        router.replace('/login')
-      }
-    })
-
-    return () => subscription.unsubscribe()
-  }, [router])
 
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.replace('/login')
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f4f6fa' }}>
-        <div className="flex flex-col items-center gap-3">
-          <div className="w-8 h-8 border-4 border-[#088DCF] border-t-transparent rounded-full animate-spin" />
-          <p className="text-[#110E3C] font-bold text-xs uppercase tracking-widest">{t('access_validating')}</p>
-        </div>
-      </div>
-    )
-  }
 
-  if (!authenticated) return null
 
   return (
     <div className="relative">
