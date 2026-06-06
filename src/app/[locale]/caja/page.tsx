@@ -2,8 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { createClient } from '@/lib/supabase/client'
-import { type CashRecord } from '@/lib/supabase'
+import { supabase, type CashRecord } from '@/lib/supabase'
 import { Wallet, Calendar, User, DollarSign, Calculator, Info, Trash2, PlusCircle, CheckCircle, RefreshCw, AlertCircle, Copy, UploadCloud, FileText, X, ExternalLink, LogOut } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
@@ -20,11 +19,11 @@ function formatCurrency(value: number) {
 }
 
 export default function CajaPage() {
-  const [authenticated, setAuthenticated] = useState(true)
+  const [authenticated, setAuthenticated] = useState(false)
+  const [authLoading, setAuthLoading] = useState(true)
   const router = useRouter()
   const t = useTranslations('Caja')
   const tCommon = useTranslations('Common')
-  const supabase = createClient()
 
   const [date, setDate] = useState('')
   const [advisor, setAdvisor] = useState('')
@@ -130,7 +129,26 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
     }
   }
 
+  useEffect(() => {
+    const checkUser = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) {
+        router.replace('/login')
+      } else {
+        setAuthenticated(true)
+      }
+      setAuthLoading(false)
+    }
+    checkUser()
 
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        setAuthenticated(false)
+        router.replace('/login')
+      }
+    })
+    return () => subscription.unsubscribe()
+  }, [router])
 
   useEffect(() => {
     if (!authenticated) return
@@ -299,7 +317,18 @@ CREATE POLICY "Allow public insert" ON storage.objects FOR INSERT WITH CHECK (bu
     router.replace('/login')
   }
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: '#f4f6fa' }}>
+        <div className="flex flex-col items-center gap-3">
+          <div className="w-8 h-8 border-4 border-[#088DCF] border-t-transparent rounded-full animate-spin" />
+          <p className="text-[#110E3C] font-bold text-xs uppercase tracking-widest">Validando Acceso...</p>
+        </div>
+      </div>
+    )
+  }
 
+  if (!authenticated) return null
 
   return (
     <div className="relative max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10 animate-fade-in" style={{ color: '#110E3C' }}>

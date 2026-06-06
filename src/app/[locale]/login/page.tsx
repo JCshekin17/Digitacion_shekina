@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { loginAction } from '@/app/actions/auth'
+import { supabase } from '@/lib/supabase'
 import { useRouter } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
@@ -39,38 +39,29 @@ export default function LoginPage() {
 
     const loginEmail = email.includes('@') ? email.toLowerCase().trim() : `${email.toLowerCase().trim()}@shekina.com`
 
-    try {
-      const formData = new FormData()
-      formData.append('email', email)
-      formData.append('password', password)
+    const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      email: loginEmail,
+      password,
+    })
 
-      const result = await loginAction(formData)
-
-      if (result.error) {
-        attemptsRef.current++
-        if (attemptsRef.current >= MAX_ATTEMPTS) {
-          lockedUntilRef.current = Date.now() + LOCKOUT_MS
-          attemptsRef.current = 0
-          setError(t('account_locked') || 'Demasiados intentos. Cuenta bloqueada por 1 minuto.')
-        } else {
-          const remaining = MAX_ATTEMPTS - attemptsRef.current
-          setError((t('invalid_credentials', { remaining })) || `Credenciales inválidas. Intentos restantes: ${remaining}`)
-        }
-        setLoading(false)
-      } else if (result.success) {
+    if (authError) {
+      attemptsRef.current++
+      if (attemptsRef.current >= MAX_ATTEMPTS) {
+        lockedUntilRef.current = Date.now() + LOCKOUT_MS
         attemptsRef.current = 0
-        
-        // Redireccionamos a través del enrutador o window.location
-        if (loginEmail === 'shekinatoursylogistica@outlook.com') {
-          window.location.href = '/es/dashboard'
-        } else {
-          window.location.href = '/es/caja'
-        }
+        setError(t('account_locked'))
+      } else {
+        const remaining = MAX_ATTEMPTS - attemptsRef.current
+        setError(t('invalid_credentials', { remaining }))
       }
-    } catch (err: any) {
-      console.error("Login Exception:", err)
-      setError(err?.message || "Error inesperado al conectar con el servidor.")
       setLoading(false)
+    } else {
+      attemptsRef.current = 0
+      if (loginEmail === 'shekinatoursylogistica@outlook.com') {
+        router.replace('/dashboard')
+      } else {
+        router.replace('/caja')
+      }
     }
   }
 
