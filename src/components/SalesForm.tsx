@@ -346,6 +346,63 @@ function ServiceCombobox({ value, onChange }: ServiceComboboxProps) {
   )
 }
 
+// ── Componente de descripción de servicio ──────────────────────
+function ServiceDescriptionFormatted({ description }: { description: string }) {
+  if (!description) return null;
+  
+  const highlightKeywords = [
+    'horario', 'horarios', 'incluye', 'transporte', 'almuerzo', 'desayuno', 'cena', 'comida',
+    'recogida', 'bus', 'lancha', 'bote', 'catamaran', 'yate', 'guia', 'oceanario', 'acuario', 
+    'snorkeling', 'snorkel', 'plancton', 'hotel', 'retorno', 'zarpe', 'bebida', 'bebidas', 
+    'coctel', 'barra', 'libre', 'impuesto', 'tasa', 'portuaria', 'dj', 'animacion', 'seguro'
+  ];
+
+  const lines = description.split('\n');
+
+  return (
+    <div className="p-3 bg-white/60 rounded-xl text-[11px] text-[#110E3C]/80 whitespace-pre-wrap border border-[#088DCF]/20 leading-relaxed max-h-52 overflow-y-auto custom-scrollbar shadow-inner">
+      <strong className="text-[#088DCF] flex items-center gap-1.5 mb-2 border-b border-[#088DCF]/10 pb-1">
+        <Info className="w-3.5 h-3.5" /> Especificaciones del Servicio
+      </strong>
+      <div className="flex flex-col gap-1">
+        {lines.map((line, idx) => {
+          const lowerLine = line.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+          const isHeader = (lowerLine.includes('incluye') || 
+                            lowerLine.includes('horario') || 
+                            lowerLine.includes('nota') || 
+                            lowerLine.includes('observacion') ||
+                            lowerLine.includes('importante') ||
+                            lowerLine.includes('itinerario')) && 
+                            (line.trim().endsWith(':') || line.length < 60);
+
+          if (isHeader) {
+            return (
+              <div key={idx} className="font-bold text-[#088DCF] mt-2 bg-[#088DCF]/5 px-2 py-1 rounded">
+                {line}
+              </div>
+            );
+          }
+
+          // Resaltar palabras clave en la línea
+          const words = line.split(/(\s+|[.,;!?:()]+)/);
+          
+          return (
+            <div key={idx} className="pl-1">
+              {words.map((word, wIdx) => {
+                const lowerWord = word.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+                if (highlightKeywords.includes(lowerWord)) {
+                  return <strong key={wIdx} className="text-orange-600 bg-orange-50 px-0.5 rounded font-bold shadow-sm">{word}</strong>;
+                }
+                return <span key={wIdx}>{word}</span>;
+              })}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── Componente principal ─────────────────────────────────────
 import { useTranslations } from 'next-intl'
 
@@ -698,13 +755,12 @@ export default function SalesForm() {
                     )}
                   </div>
                   {selectedService?.description ? (
-                    <div className="p-3 bg-white/50 rounded-lg text-[11px] text-[#110E3C]/80 whitespace-pre-wrap border border-[#088DCF]/20 leading-relaxed max-h-40 overflow-y-auto custom-scrollbar">
-                      <strong className="text-[#088DCF] block mb-1">📋 Información del Servicio:</strong>
-                      {selectedService.description}
-                    </div>
+                    <ServiceDescriptionFormatted description={selectedService.description} />
                   ) : selectedService ? (
                     <div className="p-3 bg-white/30 rounded-lg text-[11px] text-[#110E3C]/50 italic border border-[#088DCF]/10">
-                      <strong className="text-[#088DCF]/70 block mb-1">📋 Información del Servicio:</strong>
+                      <strong className="text-[#088DCF]/70 flex items-center gap-1.5 mb-1">
+                        <Info className="w-3.5 h-3.5" /> Información del Servicio
+                      </strong>
                       Este servicio no cuenta con una descripción detallada en el sistema.
                     </div>
                   ) : null}
