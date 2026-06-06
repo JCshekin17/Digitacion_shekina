@@ -44,13 +44,24 @@ export async function getGlobalCatalogSettings(): Promise<CatalogSettings> {
 export async function setGlobalCatalogSettings(settings: CatalogSettings): Promise<{success: boolean, error?: string}> {
   try {
     const blob = new Blob([JSON.stringify(settings)], { type: 'application/json' })
-    const { error } = await supabase.storage.from('tours-catalog').upload('settings.json', blob, {
-      upsert: true
+    
+    // First try to update (if file exists)
+    const { error: updateError } = await supabase.storage.from('tours-catalog').update('settings.json', blob, {
+      upsert: false
     })
-    if (error) {
-      console.error("Upload error:", error)
-      return { success: false, error: error.message }
+
+    if (updateError) {
+      // If update fails, it likely doesn't exist, so try to insert
+      const { error: insertError } = await supabase.storage.from('tours-catalog').upload('settings.json', blob, {
+        upsert: false
+      })
+      
+      if (insertError) {
+        console.error("Upload error:", insertError)
+        return { success: false, error: "Insert falló: " + insertError.message }
+      }
     }
+
     return { success: true }
   } catch (err: any) {
     console.error("Upload exception:", err)
