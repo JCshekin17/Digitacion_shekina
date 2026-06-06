@@ -1,34 +1,60 @@
 import createMiddleware from 'next-intl/middleware';
 import {routing} from './i18n/routing';
-import { updateSession } from '@/lib/supabase/middleware'
-import { type NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
 const intlMiddleware = createMiddleware(routing);
 
 export default async function middleware(request: NextRequest) {
-  // First update supabase session
-  const response = await updateSession(request)
+  // 1. Obtenemos la respuesta base de next-intl
+  const intlResponse = intlMiddleware(request)
+
+  // 2. Integramos Supabase SSR usando la respuesta de intl para no perder opciones de cookies
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          cookiesToSet.forEach(({ name, value, options }) =>
+            intlResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  const path = request.nextUrl.pathname
+  const localePrefix = path.match(/^\/(en|es)/)?.[0] || ''
   
-  // Apply intl middleware on top of the original request
-  // (We use request because updateSession doesn't rewrite the URL, just redirects if needed)
-  if (response.headers.get('location')) {
-    // If updateSession redirected, we must follow that redirect
-    return response
+  // 3. Lógica de rutas protegidas
+  if (
+    !user &&
+    (path.includes('/dashboard') || path.includes('/caja') || path.includes('/admin'))
+  ) {
+    const url = request.nextUrl.clone()
+    url.pathname = `${localePrefix}/login`
+    return NextResponse.redirect(url)
   }
 
-  const intlResponse = intlMiddleware(request)
-  
-  // Sync cookies from Supabase to IntlResponse
-  response.cookies.getAll().forEach(cookie => {
-    intlResponse.cookies.set(cookie.name, cookie.value)
-  })
+  // 4. Lógica de admin
+  if (user && path.includes('/dashboard') && user.email !== 'shekinatoursylogistica@outlook.com') {
+    const url = request.nextUrl.clone()
+    url.pathname = `${localePrefix}/caja`
+    return NextResponse.redirect(url)
+  }
 
   return intlResponse
 }
 
 export const config = {
-  // Match all pathnames except for
-  // - … if they start with `/api`, `/_next` or `/_vercel`
-  // - … the ones containing a dot (e.g. `favicon.ico`)
   matcher: ['/((?!api|_next|_vercel|.*\\..*).*)']
 };
