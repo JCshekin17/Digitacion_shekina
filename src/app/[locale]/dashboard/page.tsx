@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import Dashboard from '@/components/Dashboard'
 import { ShieldAlert, LogOut } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -11,6 +11,7 @@ export default function DashboardPage() {
   const [authenticated, setAuthenticated] = useState(true) // assume true if middleware lets us through
   const router = useRouter()
   const t = useTranslations('Dashboard')
+  const supabase = createClient()
 
   const handleLogout = async () => {
     await supabase.auth.signOut()

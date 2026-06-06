@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { useRouter } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
 import Image from 'next/image'
@@ -19,6 +19,7 @@ export default function LoginPage() {
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
   const t = useTranslations('Login')
+  const supabase = createClient()
 
   const attemptsRef = useRef(0)
   const lockedUntilRef = useRef<number>(0)
@@ -59,11 +60,12 @@ export default function LoginPage() {
       } else {
         attemptsRef.current = 0
         
-        // Determinar la redirección y forzar recarga completa para asegurar envío de cookies
+        // Forzamos al enrutador de Next.js a actualizar la vista y hacer push
+        router.refresh()
         if (loginEmail === 'shekinatoursylogistica@outlook.com') {
-          window.location.href = '/es/dashboard'
+          router.push('/dashboard')
         } else {
-          window.location.href = '/es/caja'
+          router.push('/caja')
         }
       }
     } catch (err: any) {

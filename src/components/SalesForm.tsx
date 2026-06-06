@@ -1,7 +1,8 @@
 'use client'
 
 import { useState, useEffect, useCallback, useRef } from 'react'
-import { supabase, type SaleRecord } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
+import { type SaleRecord } from '@/lib/supabase'
 import { COUNTRIES, getCitiesByCountry } from '@/lib/countries'
 import { SERVICES, normalizeServiceName } from '@/lib/services'
 import { PenSquare, CheckCircle2, XCircle, Trash2, Info, AlertTriangle, Plus } from 'lucide-react'
@@ -414,10 +415,12 @@ export default function SalesForm() {
   const t = useTranslations('SalesForm')
   const [form, setForm] = useState(INITIAL_FORM)
   const [balance, setBalance] = useState(0)
-  const [loading, setLoading] = useState(false)
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [success, setSuccess] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const [availableCities, setAvailableCities] = useState<string[]>([])
+  const [globalError, setGlobalError] = useState('')
+  const [uploadProgress, setUploadProgress] = useState<{ [key: number]: number }>({})
+
+  const supabase = createClient()
   const [customHotel, setCustomHotel] = useState('')
   const [customSeller, setCustomSeller] = useState('')
   const [proofFile, setProofFile] = useState<File | null>(null)

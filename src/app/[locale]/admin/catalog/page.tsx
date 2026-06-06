@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { supabase } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
 import { useRouter } from '@/i18n/routing'
 import { SERVICES, normalizeServiceName } from '@/lib/services'
 import { getSupabaseCatalogImages } from '@/lib/catalogStorage'
@@ -9,6 +9,7 @@ import { UploadCloud, Image as ImageIcon, CheckCircle2, ShieldAlert } from 'luci
 
 export default function AdminCatalogPage() {
   const router = useRouter()
+  const supabase = createClient()
   const [session, setSession] = useState<any>(true)
 
   const [selectedService, setSelectedService] = useState('')

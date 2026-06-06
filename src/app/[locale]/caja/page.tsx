@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { supabase, type CashRecord } from '@/lib/supabase'
+import { createClient } from '@/lib/supabase/client'
+import { type CashRecord } from '@/lib/supabase'
 import { Wallet, Calendar, User, DollarSign, Calculator, Info, Trash2, PlusCircle, CheckCircle, RefreshCw, AlertCircle, Copy, UploadCloud, FileText, X, ExternalLink, LogOut } from 'lucide-react'
 import Image from 'next/image'
 import { useTranslations } from 'next-intl'
@@ -23,6 +24,7 @@ export default function CajaPage() {
   const router = useRouter()
   const t = useTranslations('Caja')
   const tCommon = useTranslations('Common')
+  const supabase = createClient()
 
   const [date, setDate] = useState('')
   const [advisor, setAdvisor] = useState('')
