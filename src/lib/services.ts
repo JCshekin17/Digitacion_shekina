@@ -475,24 +475,27 @@ Muelle la bodeguita puerta #1
 🚫 No apto para mujeres Embarazadas 
 *Impuesto:* $18.000 por persona
 el valor de 160.000 no incluye vuelo panorámico  en helicóptero` },
-  { name: 'TOURS 5 ISLAS FULL TERRESTRE', price: 250000, cost: 175000, description: `Disfruta un recorrido espectacular por las Islas del Rosario con una experiencia completa llena de actividades, naturaleza, playas hermosas y momentos inolvidables. Ideal para quienes desean aprovechar al máximo el día.
+  { name: 'TOURS 5 ISLAS FULL TERRESTRE', price: 250000, cost: 175000, description: `¡Vive la experiencia definitiva en el Caribe con el Tour 5 Islas Full Day Terrestre! 🌴✨
+Diseñado para los viajeros más exigentes que buscan una aventura inmersiva, vibrante y llena de contrastes. Desde playas de arena blanca y aguas turquesas hasta la magia bioluminiscente de la noche, este plan lo tiene absolutamente todo para que aproveches tu día al máximo sin preocuparte por nada.
+
 ✨ Incluye:
-🚐 Recogida en hotel
-Sectores: Bocagrande, Castillo Grande, Laguito, Boquilla, Crespo, Marbella y Punto de Encuentro hasta Barú.
-🌅 Panorámica Islas del Rosario
-🏖️ Parada en Isla Privada Kokomo
-🤿 Snorkeling
-✈️ Avistamiento avioneta hundida de Pablo Escobar
-🏝️ Visita a Cholón
-Incluye cóctel de mariscos y bohío compartido.
-🌊 Visita Playa Tranquila
-Incluye almuerzo típico, uso de instalaciones y actividades.
-🌇 Atardecer
-✨ Avistamiento de plancton
-⛴️ Retorno
-📌 Nota:
-Quienes deseen entrar al Oceanario deben pagar su entrada directamente en el lugar.
-El tiempo aproximado de permanencia es de 50 minutos, y quien no ingrese puede disfrutar de la playa o realizar snorkeling.
+🚐 Transporte: Cómoda recogida en bus climatizado desde tu hotel (Bocagrande, Castillo Grande, Laguito, Boquilla, Crespo, Marbella o punto de encuentro) hasta Barú.
+🚤 Transporte en Lancha: Recorrido marítimo seguro y rápido por las islas.
+🌅 Tour Panorámico: Explora la majestuosidad del Archipiélago de las Islas del Rosario.
+🏖️ Isla Privada Kokomo: Relájate en un entorno paradisíaco y exclusivo.
+🤿 Snorkeling de Aventura: Sumérgete en arrecifes cristalinos y maravíllate con el avistamiento de la mítica avioneta hundida de Pablo Escobar.
+🏝️ Fiesta en Isla Cholón: Disfruta del mejor ambiente caribeño con un exquisito cóctel de mariscos de cortesía y bohío compartido.
+🌊 Descanso en Playa Tranquila: Relajación total con uso de excelentes instalaciones de playa.
+🍽️ Almuerzo Típico: Deliciosa gastronomía local para recargar energías frente al mar.
+🌇 Atardecer Mágico: Contempla la espectacular caída del sol en el horizonte.
+🌌 Avistamiento de Plancton: Cierra tu día nadando en aguas bioluminiscentes, una experiencia que brilla en la oscuridad.
+⛴️ Retorno: Regreso seguro a Cartagena en bus climatizado al finalizar la jornada.
+
+📌 Observaciones Importantes:
+• Oceanario: La visita es opcional. Quienes deseen ingresar deben adquirir su entrada directamente en el lugar.
+• Tiempo libre: La parada en el oceanario dura aproximadamente 50 minutos; si decides no ingresar, podrás disfrutar de la playa o seguir haciendo snorkeling.
+• No incluye: Bebidas no especificadas, toallas ni gastos adicionales.
+
 ⏰ Horario:
 7:00 a.m. – 8:00 p.m.` },
   { name: 'TOURS BAHIA + CLUB DE PLAYA KABANA', price: 200000, cost: 120000, description: `Disfruta de la NOCHE AZUL!  un recorrido en bote deportivo con barra libre de 1:30h por la bahía de Cartagena y continúa en Club Kabanna de 2h o 4h en un espectacular club de playa ubicado en la isla de Tierra Bomba, donde podrás relajarte, disfrutar de un Bar en la playa , un rooftop con piscina frente al mar, y un Restaurante exquisito. 
