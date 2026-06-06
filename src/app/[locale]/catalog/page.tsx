@@ -35,14 +35,6 @@ export default async function CatalogPage() {
             Explora nuestra variedad de tours, pasadías y servicios turísticos.
           </p>
         </div>
-        
-        {/* Enlace al panel admin para subir fotos (oculto visualmente pero accesible, o un botón real) */}
-        <a 
-          href="/admin/catalog" 
-          className="inline-flex items-center justify-center bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-sm font-semibold transition-colors"
-        >
-          Administrar Fotos
-        </a>
       </div>
 
       <CatalogGrid services={servicesWithImages} />
