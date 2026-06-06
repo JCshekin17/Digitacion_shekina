@@ -3,6 +3,9 @@ import { getSupabaseCatalogImages, getGlobalCatalogSettings } from '@/lib/catalo
 import CatalogGrid from '@/components/CatalogGrid'
 import { getTranslations } from 'next-intl/server'
 
+export const dynamic = 'force-dynamic'
+export const fetchCache = 'force-no-store'
+
 export default async function CatalogPage() {
   const t = await getTranslations('Navigation')
 
