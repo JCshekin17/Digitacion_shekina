@@ -42,7 +42,7 @@ export default function TourCard({ service, images }: TourCardProps) {
                     alt={`${service.name} - Foto ${i + 1}`}
                     fill
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                    className="object-cover"
+                    className="object-contain p-1"
                   />
                 </div>
               ))}
