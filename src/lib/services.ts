@@ -37,7 +37,7 @@ export function getTourImages(serviceName: string): string[] {
     'top 3 islas - bora bora | pao pao | islabela': 'NO_EXISTE_PARA_EVITAR_DUPLICADOS'
   };
 
-  let folderName = mapping[normService];
+  let folderName: string | undefined = mapping[normService];
 
   if (!folderName) {
     // 1. Prioritize exact match
