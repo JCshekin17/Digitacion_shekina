@@ -1,15 +1,16 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { Link, usePathname } from '@/i18n/routing'
+import { Link, usePathname, useRouter } from '@/i18n/routing'
 import Image from 'next/image'
-import { LayoutDashboard, PenSquare, Menu, X, Wallet, ImageIcon } from 'lucide-react'
+import { LayoutDashboard, PenSquare, Menu, X, Wallet, ImageIcon, LogIn, LogOut } from 'lucide-react'
 import LanguageSwitcher from './LanguageSwitcher'
 import { useTranslations } from 'next-intl'
 import { supabase } from '@/lib/supabase'
 
 export default function Navbar() {
   const pathname = usePathname()
+  const router = useRouter()
   const [menuOpen, setMenuOpen] = useState(false)
   const [session, setSession] = useState<any>(null)
 
@@ -28,6 +29,12 @@ export default function Navbar() {
 
     return () => subscription.unsubscribe()
   }, [])
+
+  const handleLogout = async () => {
+    await supabase.auth.signOut()
+    router.push('/catalog')
+    setMenuOpen(false)
+  }
 
   const allNavLinks = [
     { href: '/ventas',    label: t('ventas'), shortLabel: t('ventas_short'),    icon: <PenSquare className="w-4 h-4" /> },
@@ -75,7 +82,24 @@ export default function Navbar() {
               </Link>
             ))}
             
-            <div className="ml-4 pl-4 border-l border-[#088DCF]/20 flex items-center">
+            <div className="ml-4 pl-4 border-l border-[#088DCF]/20 flex items-center gap-4">
+              {session ? (
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span className="hidden md:inline">Salir</span>
+                </button>
+              ) : (
+                <Link 
+                  href="/login"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold text-[#110E3C] hover:bg-[#088DCF]/10 hover:text-[#088DCF] transition-all duration-200"
+                >
+                  <LogIn className="w-4 h-4" />
+                  <span className="hidden md:inline">Acceder</span>
+                </Link>
+              )}
               <LanguageSwitcher />
             </div>
           </div>
@@ -118,6 +142,32 @@ export default function Navbar() {
                 </div>
               </Link>
             ))}
+            
+            <div className="border-t border-[#088DCF]/15 mt-2 pt-2">
+              {session ? (
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center w-full gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <div>
+                    <p className="font-bold">Cerrar Sesión</p>
+                  </div>
+                </button>
+              ) : (
+                <Link
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-semibold text-[#110E3C] hover:bg-[#088DCF]/05 transition-all duration-200"
+                >
+                  <LogIn className="w-5 h-5" />
+                  <div>
+                    <p className="font-bold">Iniciar Sesión</p>
+                    <p className="text-xs text-slate-500 font-normal">Acceso empleados</p>
+                  </div>
+                </Link>
+              )}
+            </div>
           </div>
           <div className="px-4 py-3 border-t border-[#088DCF]/15 flex justify-end">
             <LanguageSwitcher />
