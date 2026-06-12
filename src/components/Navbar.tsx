@@ -1,24 +1,44 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, usePathname } from '@/i18n/routing'
 import Image from 'next/image'
 import { LayoutDashboard, PenSquare, Menu, X, Wallet, ImageIcon } from 'lucide-react'
 import LanguageSwitcher from './LanguageSwitcher'
 import { useTranslations } from 'next-intl'
+import { supabase } from '@/lib/supabase'
 
 export default function Navbar() {
   const pathname = usePathname()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [session, setSession] = useState<any>(null)
 
   const t = useTranslations('Navigation');
 
-  const navLinks = [
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session)
+    })
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [])
+
+  const allNavLinks = [
     { href: '/ventas',    label: t('ventas'), shortLabel: t('ventas_short'),    icon: <PenSquare className="w-4 h-4" /> },
     { href: '/catalog',   label: t('catalog') || 'Catálogo', shortLabel: t('catalog_short') || 'Catálogo', icon: <ImageIcon className="w-4 h-4" /> },
     { href: '/caja',      label: t('caja'),   shortLabel: t('caja_short'),      icon: <Wallet className="w-4 h-4" /> },
     { href: '/dashboard', label: t('dashboard'),  shortLabel: t('dashboard_short'), icon: <LayoutDashboard className="w-4 h-4" /> },
   ]
+
+  const navLinks = session 
+    ? allNavLinks 
+    : allNavLinks.filter(link => link.href === '/catalog')
 
   return (
     <nav className="sticky top-0 z-50 border-b border-[#088DCF]/20 bg-white/95 backdrop-blur-md shadow-sm">
