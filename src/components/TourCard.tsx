@@ -2,17 +2,22 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { ChevronLeft, ChevronRight, Info, ImageOff, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Info, ImageOff, X, ShoppingCart } from 'lucide-react'
 import { ServiceItem } from '@/lib/services'
 
 interface TourCardProps {
   service: ServiceItem
   images: string[]
+  onAddToCart?: (service: ServiceItem, date: string, pax: number) => void
 }
 
-export default function TourCard({ service, images }: TourCardProps) {
+export default function TourCard({ service, images, onAddToCart }: TourCardProps) {
   const [currentIndex, setCurrentIndex] = useState(0)
   const [isModalOpen, setIsModalOpen] = useState(false)
+  
+  // Cart state
+  const [date, setDate] = useState(new Date().toISOString().split('T')[0])
+  const [pax, setPax] = useState(1)
 
   const handleNext = (e?: React.MouseEvent) => {
     e?.stopPropagation()
@@ -108,7 +113,7 @@ export default function TourCard({ service, images }: TourCardProps) {
           </div>
         </div>
 
-        <div className="relative flex-1">
+        <div className="relative flex-1 mb-4">
           <div className={`text-sm text-slate-600 whitespace-pre-line ${!isExpanded && 'line-clamp-4'}`}>
             {fullDesc}
           </div>
@@ -121,6 +126,40 @@ export default function TourCard({ service, images }: TourCardProps) {
             </button>
           )}
         </div>
+
+        {/* Add to Cart Section */}
+        {onAddToCart && (
+          <div className="pt-4 border-t border-slate-100 mt-auto">
+            <div className="flex gap-2 mb-3">
+              <div className="flex-1">
+                <label className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1 block">Fecha</label>
+                <input 
+                  type="date" 
+                  className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-[#088DCF] focus:ring-1 focus:ring-[#088DCF] text-slate-700"
+                  value={date} 
+                  onChange={(e) => setDate(e.target.value)} 
+                  min={new Date().toISOString().split('T')[0]} 
+                />
+              </div>
+              <div className="w-16">
+                <label className="text-[10px] text-slate-500 font-semibold uppercase tracking-wider mb-1 block">Pax</label>
+                <input 
+                  type="number" 
+                  min="1" 
+                  className="w-full text-xs px-2 py-1.5 rounded-lg border border-slate-200 focus:outline-none focus:border-[#088DCF] focus:ring-1 focus:ring-[#088DCF] text-slate-700 text-center"
+                  value={pax} 
+                  onChange={(e) => setPax(parseInt(e.target.value) || 1)} 
+                />
+              </div>
+            </div>
+            <button 
+              onClick={() => onAddToCart(service, date, pax)} 
+              className="w-full bg-[#088DCF] text-white py-2.5 rounded-xl font-bold hover:bg-[#0670A6] shadow-md shadow-[#088DCF]/20 hover:shadow-lg transition-all flex items-center justify-center gap-2 text-sm"
+            >
+              <ShoppingCart className="w-4 h-4" /> Agregar al Carrito
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Lightbox Modal para ampliar imagen */}
