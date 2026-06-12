@@ -53,16 +53,6 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // ── Redireccionamiento canónico ──────────────────────────────
-  async redirects() {
-    return [
-      {
-        source: '/',
-        destination: '/ventas',
-        permanent: false,
-      },
-    ]
-  },
 };
 
 export default withNextIntl(nextConfig);
