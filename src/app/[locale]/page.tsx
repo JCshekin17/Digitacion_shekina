@@ -8,7 +8,7 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative w-full h-[60vh] md:h-[80vh] flex items-center justify-center overflow-hidden">
         <Image
-          src="/landing/caption (1).jpg" 
+          src="/landing/hero-banner.jpeg" 
           alt="Cartagena Tour"
           fill
           className="object-cover"
