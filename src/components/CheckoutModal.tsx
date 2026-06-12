@@ -415,15 +415,24 @@ export default function CheckoutModal({ isOpen, onClose, cartItems, onSuccess }:
                   />
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div className="relative">
-                    <label className="label-corp">País *</label>
+                    <label className="label-corp" htmlFor="country">
+                      País *
+                      <span className="text-orange-400/60 normal-case font-normal ml-1">(mín. 3 letras)</span>
+                    </label>
                     <CountryCombobox value={form.country} onChange={handleCountryChange} />
                   </div>
                   <div>
                     <label className="label-corp" htmlFor="city">Ciudad *</label>
                     {availableCities.length > 0 ? (
-                      <select id="city" name="city" value={form.city} onChange={handleChange} required className="input-corp">
+                      <select 
+                        id="city" name="city" 
+                        value={form.city} onChange={handleChange} 
+                        required 
+                        className="input-corp"
+                        style={{ appearance: 'none', backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: 'no-repeat', backgroundPosition: 'right 12px center' }}
+                      >
                         <option value="">Selecciona...</option>
                         {availableCities.map(c => <option key={c} value={c}>{c}</option>)}
                       </select>
